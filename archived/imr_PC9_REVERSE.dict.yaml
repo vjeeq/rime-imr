@@ -1,0 +1,13 @@
+# encoding: utf-8
+#
+# imr_PC9的拼音反查
+# 
+#
+
+---
+name: imr_PC9_REVERSE
+version: zzz
+use_preset_vocabulary: false
+import_tables:
+  - dicts/lookup/REVERSE_PC9
+...

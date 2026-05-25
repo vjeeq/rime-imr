@@ -1,0 +1,15 @@
+# encoding: utf-8
+#
+# imr_PC9的拼音反查
+# 
+# 格式：
+# 词条<Tab>[拼音1][拼音2]...<Tab>权重
+#
+
+---
+name: imr_PC9_radical_pinyin
+version: alpha-2025-2026
+use_preset_vocabulary: false
+import_tables:
+  - dicts/lookup/radical_pinyin
+...

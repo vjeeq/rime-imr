@@ -1,0 +1,10 @@
+# Rime schema settings
+# encoding: utf-8
+
+schema:
+  schema_id: imr_PC9_REVERSE
+  name: 小键盘九键反查
+  version: zzz
+translator:
+  prism: imr_PC9_REVERSE
+  dictionary: imr_PC9_REVERSE

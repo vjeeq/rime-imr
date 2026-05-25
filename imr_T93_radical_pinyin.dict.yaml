@@ -1,0 +1,12 @@
+# Rime dictionary
+# encoding: utf-8
+#
+# T93的拼音反查
+#
+
+---
+name: imr_T93_radical_pinyin
+version: zzz
+import_tables:
+  - dicts/lookup/radical_pinyin
+...

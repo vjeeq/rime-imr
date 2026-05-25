@@ -1,0 +1,12 @@
+# Rime schema settings
+# encoding: utf-8
+
+schema:
+  schema_id: imr_DPY_radical_pinyin
+  name: imr-double-拼音反查
+  version: zzz
+speller:
+  algebra:
+    __include: imr_config.yaml:/speller/algebra/imr_DPY_radical_pinyin
+translator:
+  dictionary: imr_DPY_radical_pinyin

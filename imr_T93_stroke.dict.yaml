@@ -1,0 +1,12 @@
+# Rime dictionary
+# encoding: utf-8
+#
+# T93的五笔画反查
+#
+
+---
+name: imr_T93_stroke
+version: zzz
+import_tables:
+  - dicts/lookup/stroke
+...

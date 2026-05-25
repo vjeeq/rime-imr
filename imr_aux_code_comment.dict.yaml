@@ -1,0 +1,12 @@
+# Rime dictionary
+# encoding: utf-8
+#
+# 辅助码提示
+#
+
+---
+name: imr_aux_code_comment
+version: zzz
+import_tables:
+  - dicts/lookup/AUX-wanxiang-ZRM_comment
+...

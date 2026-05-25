@@ -1,0 +1,12 @@
+# Rime dictionary
+# encoding: utf-8
+#
+# imr_DPY的辅助码
+#
+
+---
+name: imr_DPY_aux_code
+version: zzz
+import_tables:
+  - dicts/lookup/AUX-wanxiang-ZRM_DPY
+...

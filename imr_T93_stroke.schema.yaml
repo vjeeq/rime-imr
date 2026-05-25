@@ -1,0 +1,12 @@
+# Rime schema settings
+# encoding: utf-8
+
+schema:
+  schema_id: imr_T93_stroke
+  name: imr-T93-五笔画
+  version: zzz
+speller:
+  algebra:
+    - xlit/hspnz/12345/
+translator:
+  dictionary: imr_T93_stroke
