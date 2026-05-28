@@ -97,7 +97,7 @@ const TRANSFORMER = {
                         .map(([cn, en, other]) => [cn.split(''), en.split(' '), other])
                         .map(([cn_arr, en_arr, other]) => [cn_arr.join(''), en_arr.map((en, index) => en_arr[index] + ';' + aux_map[cn_arr[index]]), other])
                         .reduce((context, [cn, en, other]) => {
-                            context += `${cn}\t${en}`;
+                            context += `${cn}\t${en.join(' ')}`;
                             context += other ? `\t${other}` : '';
                             context += '\n';
                             return context
@@ -150,7 +150,6 @@ const files = [
         },
         transform: TRANSFORMER.wanxiang_aux_code_comment,
     },
-    /** 
     { // 万象pro
         source: {
             aux_txt: 'downloads/wanxiang/aux_code.txt',
@@ -173,7 +172,6 @@ const files = [
         },
         transform: TRANSFORMER.wanxiang_pro,
     },
-    */
     {   // 万象方案 => 万象模型参数
         source: {
             schema: 'downloads/wanxiang/wanxiang.schema.yaml',
