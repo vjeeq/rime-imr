@@ -93,12 +93,11 @@ const TRANSFORMER = {
                         .map(line => line.trim())
                         .filter(line => line)
                         .filter(line => line.charAt(0) != '#')
-                        .map(line => line.split('\t', 3))
-                        .map(([cn, en, other]) => [cn.split(''), en.split(' '), other])
-                        .map(([cn_arr, en_arr, other]) => [cn_arr.join(''), en_arr.map((en, index) => en_arr[index] + ';' + aux_map[cn_arr[index]]), other])
-                        .reduce((context, [cn, en, other]) => {
-                            context += `${cn}\t${en.join(' ')}`;
-                            context += other ? `\t${other}` : '';
+                        .map(line => line.split('\t'))
+                        .map(([cn, en, ...other]) => [[...cn], en.split(' '), other])
+                        .map(([cn_arr, en_arr, other_arr]) => [cn_arr.join(''), en_arr.map((en, index) => `${en};${aux_map[cn_arr[index]]??''}`).join(' '), other_arr])
+                        .reduce((context, [cn, en, other_arr]) => {
+                            context += [cn, en, ...other_arr].join('\t')
                             context += '\n';
                             return context
                         }, '')
