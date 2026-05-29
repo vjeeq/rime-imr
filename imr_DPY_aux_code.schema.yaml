@@ -3,7 +3,7 @@
 
 schema:
   schema_id: imr_DPY_aux_code
-  name: imr-double-辅助码
+  name: imr-DPY-辅助码
   version: zzz
 translator:
   dictionary: imr_DPY_aux_code

@@ -3,7 +3,7 @@
 
 schema:
   schema_id: imr_DPY_radical_pinyin
-  name: imr-double-拼音反查
+  name: imr-DPY-拼音反查
   version: zzz
 speller:
   algebra:
