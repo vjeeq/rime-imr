@@ -10,6 +10,7 @@ config_version: '2026-02-06'
 schema_list:
   - schema: imr_DPY
   - schema: imr_T93
+  - schema: imr_DPY_base
 
 
 # 菜单
