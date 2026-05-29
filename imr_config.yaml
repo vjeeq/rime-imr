@@ -339,17 +339,15 @@ translator:
 
   comment_format:
     万象:
-      - xform/^ng(?= |$)/eng/
-      - xform/ ng(?= |$)/ eng/
+      - xform/;[^ ]*(?= |$)//
+      - xform/(^| )ng(?= |$)/${1}eng/
       - xform/ńg/éng/
       - xform/ňg/ěng/
       - xform/ǹg/èng/
-      - xform/^n(?= |$)/en/
-      - xform/ n(?= |$)/ en/
+      - xform/(^| )n(?= |$)/${1}en/
       - xform/ń/én/
       - xform/ň/ěn/
       - xform/ǹ/èn/
-      - xform/^m(?= |$)/me/
-      - xform/ m(?= |$)/ me/
+      - xform/(^| )m(?= |$)/${1}me/
       - xform/ḿ/mé/
       - xform/m̀/mè/
