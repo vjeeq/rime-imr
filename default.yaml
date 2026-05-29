@@ -8,9 +8,9 @@ config_version: '2026-02-06'
 
 # 方案列表
 schema_list:
-  - schema: imr_DPY
+  - schema: imr_DPY_pro
   - schema: imr_T93
-  - schema: imr_DPY_base
+  - schema: imr_DPY
 
 
 # 菜单
