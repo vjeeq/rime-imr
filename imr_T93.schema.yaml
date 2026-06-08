@@ -31,8 +31,8 @@ schema:
     # - melt_eng # 英文输入，作为次翻译器挂载到拼音方案
     - imr_T93_radical_pinyin
     - imr_T93_stroke
-    - imr_T93_aux_code
-    - imr_aux_code_comment
+    - imr_T93_auxcode
+    - imr_auxcode_comment
 
 engine:
   processors:
@@ -164,11 +164,11 @@ aux:
     # default: '`'
     learn: '`'
     no_learn: '``'
-  db: imr_T93_aux_code
+  db: imr_T93_auxcode
   length: 3
   comment:
     enable: true
-    db: imr_aux_code_comment
+    db: imr_auxcode_comment
 
 menu:
   alternative_select_keys: ABCDEFGHIJ

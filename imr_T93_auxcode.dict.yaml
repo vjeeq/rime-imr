@@ -5,8 +5,8 @@
 #
 
 ---
-name: imr_T93_aux_code
+name: imr_T93_auxcode
 version: zzz
 import_tables:
-  - dicts/lookup/AUX-wanxiang-ZRM_T93
+  - dicts/lookup/AUX_T93
 ...

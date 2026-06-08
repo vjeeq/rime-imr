@@ -25,7 +25,7 @@ const files = {
     //// 万象辅助码
     'downloads/wanxiang/aux_code.txt': 'https://cnb.cool/amzxyz/rime-wanxiang/-/git/raw/wanxiang/custom/aux_code.txt',
     //// 万象自然码辅助码注释
-    'downloads/wanxiang/zrm_chaifen.txt': 'https://cnb.cool/amzxyz/rime-wanxiang/-/git/raw/wanxiang/custom/zrm_chaifen.txt',
+    'downloads/wanxiang/aux_chaifen.txt': 'https://cnb.cool/amzxyz/rime-wanxiang/-/git/raw/wanxiang/custom/zrm_chaifen.txt',
     //// 万象模型
     'wanxiang-lts-zh-hans.gram': 'https://cnb.cool/amzxyz/rime-wanxiang/-/releases/download/model/wanxiang-lts-zh-hans.gram',
     //// 万象方案(同步模型参数用)

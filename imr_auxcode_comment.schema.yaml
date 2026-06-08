@@ -2,8 +2,8 @@
 # encoding: utf-8
 
 schema:
-  schema_id: imr_aux_code_comment
+  schema_id: imr_auxcode_comment
   name: imr-辅助码提示
   version: zzz
 translator:
-  dictionary: imr_aux_code_comment
+  dictionary: imr_auxcode_comment

@@ -24,8 +24,8 @@ schema:
     自然码双拼
   dependencies:
     - imr_DPY_radical_pinyin     # 部件拆字，反查及辅码
-    - imr_DPY_aux_code
-    - imr_aux_code_comment
+    - imr_DPY_auxcode
+    - imr_auxcode_comment
 
 
 # 开关
@@ -302,12 +302,12 @@ aux:
     # default: '`'
     learn: '`'
     no_learn: '``'
-  db: imr_DPY_aux_code
+  db: imr_DPY_auxcode
   length: 2
   comment:
     enable: true
     normal_enable: true
-    db: imr_aux_code_comment
+    db: imr_auxcode_comment
 
 __patch:
   imr_grammar:/

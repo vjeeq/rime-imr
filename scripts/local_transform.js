@@ -1,7 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 const PROJECT_ROOT = path.join(__dirname, '..');
-const YAML = require(path.join(PROJECT_ROOT, 'scripts', 'js-yaml.min'))
+const YAML_JS = require(path.join(PROJECT_ROOT, 'scripts', 'utils', 'js-yaml.min'));
+// [1]万象 [2]墨奇 [3]小鹤 [4]自然码 [5]虎码 [6]五笔 [7]汉心 [8]首右 [9]首右+
+const AUX_INDEX = 4;
 const T93_EN_NUM = {
     /**
       # |by*|kvc|qso|
@@ -19,7 +21,7 @@ const T93_EN_NUM = {
     'h': [9, 1], 'd': [9, 2], 'a': [9, 3],
 }
 const TRANSFORMER = {
-    wanxiang_aux_code({ txt: source_context }) {
+    wanxiang_auxcode({ txt: source_context }) {
         return source_context.split('\n')
             .map(line => line.trim())
             .filter(line => line)
@@ -27,10 +29,8 @@ const TRANSFORMER = {
             .map(line => line.split('\t', 2))
             .filter(arr => arr.length === 2)
             .map(([cn, code_str]) => [cn, code_str.split(';')])
-            .filter(([cn, code_arr]) => code_arr.length >= 5)
-            // 万象 墨奇 小鹤 自然码 虎码 五笔 汉心 首右 首右+
-            // [4] 是自然码
-            .map(([cn, code_arr]) => [cn, code_arr[4]])
+            .filter(([cn, code_arr]) => code_arr.length >= AUX_INDEX + 1)
+            .map(([cn, code_arr]) => [cn, code_arr[AUX_INDEX]])
             // code包含','
             .filter(([cn, code]) => code)
             .flatMap(([cn, code]) => code.split(',').map(code => [cn, code]))
@@ -54,7 +54,7 @@ const TRANSFORMER = {
                 return result;
             }, { DPY: '', T93: '' })
     },
-    wanxiang_aux_code_comment({ txt: source_context }) {
+    wanxiang_auxcode_comment({ txt: source_context }) {
         return source_context.split('\n')
             .map(line => line.trim())
             .filter(line => line)
@@ -76,8 +76,8 @@ const TRANSFORMER = {
             .map(line => line.split('\t', 2))
             .filter(arr => arr.length === 2)
             .map(([cn, en_str]) => [cn, en_str.split(';')])
-            .filter(([_, en_arr]) => en_arr.length >= 5)
-            .map(([cn, en_arr]) => [cn, en_arr[4]])
+            .filter(([_, en_arr]) => en_arr.length >= AUX_INDEX + 1)
+            .map(([cn, en_arr]) => [cn, en_arr[AUX_INDEX]])
             .filter(([cn, code]) => code)
             .reduce((aux_map, [cn, code]) => {
                 aux_map[cn] = code;
@@ -96,7 +96,7 @@ const TRANSFORMER = {
                         .filter(line => line.charAt(0) != '#')
                         .map(line => line.split('\t'))
                         .map(([cn, en, ...other]) => [[...cn], en.split(' '), other])
-                        .map(([cn_arr, en_arr, other_arr]) => [cn_arr.join(''), en_arr.map((en, index) => `${en};${aux_map[cn_arr[index]]??''}`).join(' '), other_arr])
+                        .map(([cn_arr, en_arr, other_arr]) => [cn_arr.join(''), en_arr.map((en, index) => `${en};${aux_map[cn_arr[index]] ?? ''}`).join(' '), other_arr])
                         .reduce((context, [cn, en, other_arr]) => {
                             context += [cn, en, ...other_arr].join('\t')
                             context += '\n';
@@ -111,13 +111,13 @@ const TRANSFORMER = {
     },
     grammar(source_map) {
         const source = source_map.schema
-        const source_json = YAML.load(source)
+        const source_json = YAML_JS.load(source)
         const target_json = {}
         target_json.grammar = source_json.grammar
         target_json['translator/contextual_suggestions'] = false
         target_json['translator/max_homophones'] = source_json.translator.max_homophones
         target_json['translator/max_homographs'] = source_json.translator.max_homographs
-        const target = YAML.dump(target_json)
+        const target = YAML_JS.dump(target_json)
         return { grammar: target }
     }
 }
@@ -128,27 +128,27 @@ const files = [
         },
         target: {
             DPY: {
-                file: 'dicts/lookup/AUX-wanxiang-ZRM_DPY.dict.yaml',
-                name: 'AUX-wanxiang-ZRM_DPY',
+                file: 'dicts/lookup/AUX_DPY.dict.yaml',
+                name: 'AUX_DPY',
             },
             T93: {
-                file: 'dicts/lookup/AUX-wanxiang-ZRM_T93.dict.yaml',
-                name: 'AUX-wanxiang-ZRM_T93',
+                file: 'dicts/lookup/AUX_T93.dict.yaml',
+                name: 'AUX_T93',
             }
         },
-        transform: TRANSFORMER.wanxiang_aux_code,
+        transform: TRANSFORMER.wanxiang_auxcode,
     },
     {  // 万象辅助码注释 => 注释字典
         source: {
-            txt: 'downloads/wanxiang/zrm_chaifen.txt',
+            txt: 'downloads/wanxiang/aux_chaifen.txt',
         },
         target: {
             comment: {
-                file: 'dicts/lookup/AUX-wanxiang-ZRM_comment.dict.yaml',
-                name: 'AUX-wanxiang-ZRM_comment'
+                file: 'dicts/lookup/AUX_comment.dict.yaml',
+                name: 'AUX_comment'
             },
         },
-        transform: TRANSFORMER.wanxiang_aux_code_comment,
+        transform: TRANSFORMER.wanxiang_auxcode_comment,
     },
     { // 万象pro
         source: {

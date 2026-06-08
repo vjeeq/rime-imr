@@ -5,8 +5,8 @@
 #
 
 ---
-name: imr_aux_code_comment
+name: imr_auxcode_comment
 version: zzz
 import_tables:
-  - dicts/lookup/AUX-wanxiang-ZRM_comment
+  - dicts/lookup/AUX_comment
 ...

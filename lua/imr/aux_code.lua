@@ -167,7 +167,7 @@ function AuxFilter.init(env)
             ctx:commit()
         end
     end)
-    -- AuxFilter.aux_code { ["啊"] = ka,["阿"] = ek,}
+    -- AuxFilter.auxcode { ["啊"] = ka,["阿"] = ek,}
 end
 
 ----------------

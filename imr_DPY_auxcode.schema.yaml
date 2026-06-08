@@ -2,8 +2,8 @@
 # encoding: utf-8
 
 schema:
-  schema_id: imr_DPY_aux_code
+  schema_id: imr_DPY_auxcode
   name: imr-DPY-辅助码
   version: zzz
 translator:
-  dictionary: imr_DPY_aux_code
+  dictionary: imr_DPY_auxcode

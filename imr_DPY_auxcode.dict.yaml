@@ -5,8 +5,8 @@
 #
 
 ---
-name: imr_DPY_aux_code
+name: imr_DPY_auxcode
 version: zzz
 import_tables:
-  - dicts/lookup/AUX-wanxiang-ZRM_DPY
+  - dicts/lookup/AUX_DPY
 ...
