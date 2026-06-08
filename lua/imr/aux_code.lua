@@ -1,10 +1,10 @@
 utf8.char_at = function(s, n)
     if n <= 0 then return nil end
-    local start = utf8.offset(s, n)      -- 第 n 个字符的起始字节位置
-    if not start then return nil end     -- n 超出字符串长度
-    local next_start = utf8.offset(s, n + 1)  -- 下一个字符起始位置
+    local start = utf8.offset(s, n)          -- 第 n 个字符的起始字节位置
+    if not start then return nil end         -- n 超出字符串长度
+    local next_start = utf8.offset(s, n + 1) -- 下一个字符起始位置
     if not next_start then
-        next_start = #s + 1              -- 最后一个字符截取到结尾
+        next_start = #s + 1                  -- 最后一个字符截取到结尾
     end
     return s:sub(start, next_start - 1)
 end
@@ -81,7 +81,7 @@ function AuxFilter.init(env)
 
     env.triggers = {
         { mode = "no_learn", token = env.no_learn_trigger },
-        { mode = "learn", token = env.learn_trigger },
+        { mode = "learn",    token = env.learn_trigger },
     }
     env.length = config:get_int('aux/length') or 2
 
@@ -101,11 +101,17 @@ function AuxFilter.init(env)
     env.trigger_key = env.learn_trigger
     -- 设定是否显示辅助码，默认为显示
     env.show_comment = config:get_string("aux/comment/enable") or 'true'
+    env.show_comment_normal = config:get_string('aux/comment/normal_enable') or 'false'
     if env.show_comment == "false" then
         env.show_comment = false
     else
         env.show_comment = true
         AuxFilter.comment_db = ReverseLookup(config:get_string('aux/comment/db'))
+    end
+    if env.show_comment_normal == 'false' then
+        env.show_comment_normal = false
+    else
+        env.show_comment_normal = true
     end
 
     ----------------------------
@@ -161,7 +167,7 @@ function AuxFilter.init(env)
             ctx:commit()
         end
     end)
--- AuxFilter.aux_code { ["啊"] = ka,["阿"] = ek,} 
+    -- AuxFilter.aux_code { ["啊"] = ka,["阿"] = ek,}
 end
 
 ----------------
@@ -221,7 +227,7 @@ local function find_phrase_match(word, _auxStr, length)
         end
     end
     -- return match_count -- 持续上屏，因此如果输入的辅码比候选多，还是会保留候选（应处理，选完保留剩余辅码（现在做不到））
-    return 0  -- 不持续上屏，因此如果输入的辅码比候选多，则不显示这个候选（uiui`yuyu，只匹配uiui不会匹配ui'ui的第一个ui）
+    return 0 -- 不持续上屏，因此如果输入的辅码比候选多，则不显示这个候选（uiui`yuyu，只匹配uiui不会匹配ui'ui的第一个ui）
 end
 
 local function is_phrase_candidate(cand)
@@ -256,7 +262,7 @@ local function append_comment(cand, auxCodes, char)
         local original_cand = cand:get_genuine()
         if not original_cand then
             cand.comment = merge_comment(cand.comment, comment)
-            return
+            return cand
         end
         return ShadowCandidate(
             original_cand,
@@ -314,13 +320,17 @@ function AuxFilter.func(input, env)
     if mode == "none" then
         -- 没有输入辅助码引导符，则直接yield所有待选项，不进入后续迭代，提升性能
         for cand in input:iter() do
+            if env.show_comment_normal then
+                local lookup_char = utf8.char_at(cand.text, utf8.len(cand.text))
+                if lookup_char and cand._end == #inputCode then  -- 需要完全匹配
+                    local auxCodes = AuxFilter.comment_db:lookup(lookup_char)
+                    cand = append_comment(cand, auxCodes, lookup_char)
+                end
+            end
             yield(cand)
         end
         return
     end
-
-    local first_exact_bucket = {}
-    local full_aux_bucket = {}
 
     local function to_yield_candidate(cand)
         if mode == "no_learn" then
@@ -332,70 +342,25 @@ function AuxFilter.func(input, env)
     -- 遍歷每一個待選項
     for _cand in input:iter() do
         local cand = _cand
-
-        -- 過濾輔助碼
         if #auxStr == 0 then
-            -- 没有辅助码，加一下提示，直接返回
-            if env.show_comment then
-                local hint_char, lookup_char
-                if is_multi_char_text(cand.text) then
-                    lookup_char = utf8.char(utf8.codepoint(cand.text, 1))
-                    hint_char = lookup_char
-                else
-                    lookup_char = cand.text
-                    hint_char = ''
-                end
-                local auxCodes = AuxFilter.comment_db:lookup(lookup_char)
-                cand = append_comment(cand, auxCodes, hint_char)
+            local lookup_char = utf8.char_at(cand.text, 1)
+            if lookup_char then
+                cand = append_comment(cand, AuxFilter.comment_db:lookup(lookup_char), lookup_char)
             end
-            yield((to_yield_candidate(cand)))
+            yield(to_yield_candidate(cand))
         elseif #auxStr > 0 and is_phrase_candidate(cand) then
             local matched_count = find_phrase_match(cand.text, auxStr, env.length)
-            -- 仅词组候选显示命中提示，单字继续沿用“显示全部辅码”。
             if matched_count > 0 then
                 if env.show_comment then
-                    local lookup_char = utf8.char_at(cand.text, matched_count)
-                    assert(lookup_char)
-                    local auxCodes = AuxFilter.comment_db:lookup(lookup_char)
-                    local hint_char = ''
-                    if is_multi_char_text(cand.text) then
-                        hint_char = lookup_char
+                    local lookup_char = utf8.char_at(cand.text, matched_count + ((#auxStr % env.length == 0 and 1) or 0))
+                    if lookup_char then
+                        cand = append_comment(cand, AuxFilter.comment_db:lookup(lookup_char), lookup_char)
                     end
-                    cand = append_comment(cand, auxCodes, hint_char)
                 end
-                table.insert(first_exact_bucket, cand)
-            end
-
-            -- if matched and matched.pos == 1 then
-            -- elseif matched then
-                -- table.insert(full_aux_bucket, cand)
-            -- end
-        else
-            -- 待选项字词 没有 匹配到当前的辅助码，插入到列表中，最后插入到候选框里( 获得靠后的位置 )
-            -- table.insert(insertLater, cand)
-            -- 更新逻辑：没有匹配上就不出现再候选框里，提升性能
-        end
-    end
-
-    local seen = {}
-    local function yield_bucket(bucket)
-        for _, cand in ipairs(bucket) do
-            local key = cand.type .. "\t" .. cand.start .. "\t" .. cand._end .. "\t" .. cand.text
-            if not seen[key] then
-                seen[key] = true
                 yield(to_yield_candidate(cand))
             end
         end
     end
-
-    yield_bucket(first_exact_bucket)
-    yield_bucket(full_aux_bucket)
-
-    -- 把沒有匹配上的待選給添加上
-    -- for _, cand in ipairs(insertLater) do
-    --     yield(cand)
-    -- end
-    -- 更新逻辑：没有匹配上就不出现再候选框里，提升性能
 end
 
 function AuxFilter.fini(env)

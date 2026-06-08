@@ -306,6 +306,7 @@ aux:
   length: 2
   comment:
     enable: true
+    normal_enable: true
     db: imr_aux_code_comment
 
 __patch:

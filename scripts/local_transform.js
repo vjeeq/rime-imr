@@ -28,6 +28,7 @@ const TRANSFORMER = {
             .filter(arr => arr.length === 2)
             .map(([cn, code_str]) => [cn, code_str.split(';')])
             .filter(([cn, code_arr]) => code_arr.length >= 5)
+            // 万象 墨奇 小鹤 自然码 虎码 五笔 汉心 首右 首右+
             // [4] 是自然码
             .map(([cn, code_arr]) => [cn, code_arr[4]])
             // code包含','
@@ -60,7 +61,7 @@ const TRANSFORMER = {
             .filter(line => line.charAt(0) != '#')
             .map(line => line.split('\t', 2))
             .filter(arr => arr.length === 2)
-            .flatMap(([cn, comments]) => comments.split('｜').map(comment => [cn, comment]))
+            .flatMap(([cn, comments]) => comments.replaceAll(' ', '').split('｜').map(comment => [cn, comment]))
             .filter(([cn, comment]) => comment)
             .reduce((result, [cn, comment]) => {
                 result.comment += `${cn}\t${comment}\n`
