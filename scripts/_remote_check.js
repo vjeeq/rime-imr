@@ -72,7 +72,7 @@ async function syncViaConditionalRequest(url, localPath) {
         console.log('结果：远程文件未变化（ETag 相同），无需下载。', localPath);
         return true;
     }
-    console.log('[下载]', localPath)
+    console.log('[下载]', url, localPath)
     // 写入文件
     const buffer = Buffer.from(await downloadWithProgress(response));
     try {
@@ -92,10 +92,11 @@ async function syncViaConditionalRequest(url, localPath) {
 async function downloadWithProgress(response) {
     // 1. 获取总大小
     const contentLength = response.headers.get('content-length');
+    const contentEncoding = response.headers.get('content-encoding');
     const total = contentLength ? parseInt(contentLength, 10) : null;
 
     // 无法获知总大小则直接回退（可选：也可以继续流式下载但不打印进度）
-    if (!total) {
+    if (!total || contentEncoding) {
         return response.arrayBuffer();
     }
 

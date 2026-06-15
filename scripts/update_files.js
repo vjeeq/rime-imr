@@ -1,3 +1,8 @@
+const fs = require('fs');
+const path = require('path');
+const https = require('https');
+const PROJECT_ROOT = path.join(__dirname, '..');
+
 const files = {
     //// 雾凇
     // 'dicts/ice/8105.dict.yaml': 'https://raw.githubusercontent.com/iDvel/rime-ice/main/cn_dicts/8105.dict.yaml',
@@ -25,7 +30,7 @@ const files = {
     //// 万象辅助码
     'downloads/wanxiang/aux_code.txt': 'https://cnb.cool/amzxyz/rime-wanxiang/-/git/raw/wanxiang/custom/aux_code.txt',
     //// 万象自然码辅助码注释
-    'downloads/wanxiang/aux_chaifen.txt': 'https://cnb.cool/amzxyz/rime-wanxiang/-/git/raw/wanxiang/custom/zrm_chaifen.txt',
+    'downloads/wanxiang/aux_chaifen.txt': require(path.join(PROJECT_ROOT, 'scripts', 'aux_code')).AUX_CF_URL,
     //// 万象模型
     'wanxiang-lts-zh-hans.gram': 'https://cnb.cool/amzxyz/rime-wanxiang/-/releases/download/model/wanxiang-lts-zh-hans.gram',
     //// 万象方案(同步模型参数用)
@@ -37,10 +42,6 @@ const files = {
 // 同步远程数据
 
 
-const fs = require('fs');
-const path = require('path');
-const https = require('https');
-const PROJECT_ROOT = path.join(__dirname, '..');
 const checkAndUpdateFile = require(path.join(PROJECT_ROOT, 'scripts', '_remote_check'));
 
 
