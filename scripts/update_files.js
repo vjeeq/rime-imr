@@ -1,6 +1,5 @@
 const fs = require('fs');
 const path = require('path');
-const https = require('https');
 const PROJECT_ROOT = path.join(__dirname, '..');
 
 const files = {
@@ -53,23 +52,37 @@ async function updateFiles(type = 'All') {
 
     let successCount = 0;
     let totalCount = 0;
+    let skipCount = 0;
 
     // 遍历所有配置的文件
     for (const [filePath, remoteUrl] of Object.entries(files)) {
         if (type === 'All' || remoteUrl.startsWith('https://cnb.cool')) {
             totalCount++;
-            const success = await checkAndUpdateFile(remoteUrl, filePath);
-            if (success) {
-                successCount++;
+            const isWanxiang = remoteUrl.startsWith('https://cnb.cool');
+            const isFirstDownload = !fs.existsSync(path.join(PROJECT_ROOT, filePath));
+            try {
+                const success = await checkAndUpdateFile(remoteUrl, filePath);
+                if (success) successCount++;
+            } catch (err) {
+                if (isWanxiang) {
+                    console.error(`\n[严重错误] 万象文件 ${filePath} 同步失败，终止流程`);
+                    throw err;
+                }
+                if (isFirstDownload) {
+                    console.error(`\n[严重错误] ${filePath} 首次下载失败，终止流程`);
+                    throw err;
+                }
+                console.warn(`\n[警告] ${filePath} 更新失败，已跳过`);
+                console.warn(`  原因: ${err.message}`);
+                skipCount++;
             }
         }
     }
 
     console.log(`\n====================`);
     console.log(`同步完成! 成功: ${successCount}/${totalCount} 个文件`);
-    if (successCount < totalCount) {
-        console.log('⚠ 部分文件同步失败，请检查上面的错误信息');
-        process.exit(1);
+    if (skipCount > 0) {
+        console.log(`⚠ ${skipCount} 个GitHub文件更新失败，已跳过`);
     }
 }
 

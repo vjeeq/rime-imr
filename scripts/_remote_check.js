@@ -54,7 +54,18 @@ async function syncViaConditionalRequest(url, localPath) {
         console.log(`[缓存] 使用 ETag: ${cachedETag}`);
     }
 
-    const response = await fetch(url, { headers });
+    let response;
+    try {
+        response = await fetch(url, { headers });
+    } catch (err) {
+        const fileName = path.basename(localPath);
+        throw new Error(
+            `[错误] 下载失败: ${fileName}\n` +
+            `  URL: ${url}\n` +
+            `  原因: ${err.cause?.code || err.code || err.message}\n` +
+            `  建议: 请检查网络连接，或稍后重试`
+        );
+    }
 
     // 304 → 文件未变化
     if (response.status === 304) {
