@@ -29,13 +29,13 @@ local Processor = {
             and (context:is_composing() or context:has_menu())
         then
             local key_repr = key:repr()
-            -- 前面是完整拼音，后面输入的第一个0视为`
+            -- 前面是完整拼音，后面输入的第一个0视为;
             if key_repr == '0' then
                 local text = ignore_word(context.input:sub(1, context.caret_pos))
-                if text == '' or text == '`' then
-                    -- 在最后加`
+                if text == '' or text == ';' then
+                    -- 在最后加;
                     local caret_pos = context.caret_pos == #context.input and #context.input + 1 or context.caret_pos
-                    context.input = context.input .. '`'
+                    context.input = context.input .. ';'
                     context.caret_pos = caret_pos
                     return 1
                 end
@@ -67,7 +67,7 @@ local Processor = {
             end
 
             -- 辅码模式处理，允许tab后输入/删除辅码
-            if context.input:match('`') then
+            if context.input:match(';') then
                 if key_repr:match('^[0-9]$') then
                     local caret_pos = context.caret_pos == #context.input and #context.input + 1 or context.caret_pos
                     context.input = context.input .. key_repr

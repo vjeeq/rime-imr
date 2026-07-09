@@ -291,7 +291,7 @@ editor:
 # 拼写设定
 speller:
   # 如果不想让什么标点直接上屏，可以加在 alphabet，或者编辑标点符号为两个及以上的映射
-  alphabet: zyxwvutsrqponmlkjihgfedcbaZYXWVUTSRQPONMLKJIHGFEDCBA`7890/
+  alphabet: zyxwvutsrqponmlkjihgfedcbaZYXWVUTSRQPONMLKJIHGFEDCBA;7890/
   # initials 定义仅作为始码的按键，排除 ` 让单个的 ` 可以直接上屏
   initials: zyxwvutsrqponmlkjihgfedcbaZYXWVUTSRQPONMLKJIHGFEDCBA
   delimiter: " '"  # 第一位<空格>是拼音之间的分隔符；第二位<'>表示可以手动输入单引号来分割拼音。
@@ -299,16 +299,13 @@ speller:
     __include: imr_config:/speller/algebra/imr_DPY
 
 aux:
-  trigger:
-    # default: '`'
-    learn: '`'
-    no_learn: '``'
+  trigger: ';'
+  no_learn_trigger: ';;'
   db: imr_DPY_auxcode
   length: 2
-  comment:
-    enable: true
-    normal_enable: true
-    db: imr_auxcode_comment
+  show_comment: true
+  normal_comment: true
+  comment_db: imr_auxcode_comment
 
 __patch:
   imr_grammar:/

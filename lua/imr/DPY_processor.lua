@@ -9,7 +9,7 @@ local Processor = {
         then
             local key_repr = key:repr()
             -- 辅码模式处理，允许tab后输入/删除辅码
-            if context.input:match('`') then
+            if context.input:match(';') then
                 if key_repr:match('^[a-z]$') then
                     local caret_pos = context.caret_pos == #context.input and #context.input + 1 or context.caret_pos
                     context.input = context.input .. key_repr

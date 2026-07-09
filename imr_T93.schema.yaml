@@ -37,7 +37,7 @@ schema:
 engine:
   processors:
     - lua_processor@*imr.T93_processor
-    - lua_processor@*imr.select_char*Processor
+    # - lua_processor@*imr.select_char*Processor
     - ascii_composer
     - recognizer
     - key_binder
@@ -125,7 +125,7 @@ punctuator:
     e: [ "↑", "↓", "←", "→", "✓", "✗" ]
 
 speller:
-  alphabet: 0123456789`abcde
+  alphabet: 0123456789;abcde
   initials: 0123456789
   delimiter: " '"  # 第一位<空格>是拼音之间的分隔符；第二位<'>表示可以手动输入单引号来分割拼音。
   algebra:
@@ -161,15 +161,12 @@ reverse_lookup:
     __include: imr_config:/translator/comment_format/万象
 
 aux:
-  trigger:
-    # default: '`'
-    learn: '`'
-    no_learn: '``'
+  trigger: ';'
+  no_learn_trigger: ';;'
   db: imr_T93_auxcode
   length: 3
-  comment:
-    enable: true
-    db: imr_auxcode_comment
+  show_comment: true
+  comment_db: imr_auxcode_comment
 
 menu:
   alternative_select_keys: ABCDEFGHIJ

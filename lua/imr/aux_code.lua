@@ -67,13 +67,10 @@ function AuxFilter.init(env)
     local engine = env.engine
     local config = engine.schema.config
 
-    AuxFilter.db = ReverseLookup(config:get_string('aux/db'))
+    env.db = ReverseLookup(config:get_string('aux/db'))
 
-    -- 双触发键：learn 与 no_learn
-    env.learn_trigger = normalize_trigger(config:get_string("aux/trigger/default"), nil)
-        or normalize_trigger(config:get_string("aux/trigger/learn"), nil)
-        or ";"
-    env.no_learn_trigger = normalize_trigger(config:get_string("aux/trigger/no_learn"), "")
+    env.learn_trigger = normalize_trigger(config:get_string("aux/trigger"), nil) or ";"
+    env.no_learn_trigger = normalize_trigger(config:get_string("aux/no_learn_trigger"), "")
 
     if env.no_learn_trigger == env.learn_trigger then
         env.no_learn_trigger = ""
@@ -100,18 +97,11 @@ function AuxFilter.init(env)
     -- 兼容旧逻辑，后续任务会替换为 parse 模式
     env.trigger_key = env.learn_trigger
     -- 设定是否显示辅助码，默认为显示
-    env.show_comment = config:get_string("aux/comment/enable") or 'true'
-    env.show_comment_normal = config:get_string('aux/comment/normal_enable') or 'false'
-    if env.show_comment == "false" then
-        env.show_comment = false
-    else
-        env.show_comment = true
-        AuxFilter.comment_db = ReverseLookup(config:get_string('aux/comment/db'))
-    end
-    if env.show_comment_normal == 'false' then
-        env.show_comment_normal = false
-    else
-        env.show_comment_normal = true
+    env.show_comment = config:get_bool("aux/show_comment")
+    if env.show_comment == nil then env.show_comment = true end
+    env.normal_comment = config:get_bool("aux/normal_comment") or false
+    if env.show_comment then
+        env.comment_db = ReverseLookup(config:get_string('aux/comment_db'))
     end
 
     ----------------------------
@@ -189,12 +179,12 @@ end
 -- 预处理辅码索引，避免在候选循环中重复拆分字符串。
 -- k1: 记录每个字可命中的首键；k12: 记录前两键完整命中。
 
-local function char_matches_aux(char, auxStr)
+local function char_matches_aux(env, char, auxStr)
     if auxStr == "" then
         return false
     end
 
-    local code = AuxFilter.db:lookup(char)
+    local code = env.db:lookup(char)
     if not code or #code == 0 then
         return false
     end
@@ -206,7 +196,7 @@ end
 
 -- 词组匹配按字位逐个检查，命中即返回。
 -- 这样只允许同一个字完整命中，避免旧逻辑跨字混拼误命中。
-local function find_phrase_match(word, _auxStr, length)
+local function find_phrase_match(env, word, _auxStr, length)
     local auxStr = _auxStr
 
     if auxStr == "" or not word or word == "" then
@@ -218,7 +208,7 @@ local function find_phrase_match(word, _auxStr, length)
         local char = utf8.char(codePoint)
         local this_aux = length == 0 and auxStr or auxStr:sub(1, length)
         auxStr = auxStr:sub(#this_aux + 1)
-        if not char_matches_aux(char, this_aux) then
+        if not char_matches_aux(env, char, this_aux) then
             return 0
         end
         match_count = match_count + 1
@@ -227,7 +217,7 @@ local function find_phrase_match(word, _auxStr, length)
         end
     end
     -- return match_count -- 持续上屏，因此如果输入的辅码比候选多，还是会保留候选（应处理，选完保留剩余辅码（现在做不到））
-    return 0 -- 不持续上屏，因此如果输入的辅码比候选多，则不显示这个候选（uiui`yuyu，只匹配uiui不会匹配ui'ui的第一个ui）
+    return 0 -- 不持续上屏，因此如果输入的辅码比候选多，则不显示这个候选（uiui;yuyu，只匹配uiui不会匹配ui'ui的第一个ui）
 end
 
 local function is_phrase_candidate(cand)
@@ -320,10 +310,10 @@ function AuxFilter.func(input, env)
     if mode == "none" then
         -- 没有输入辅助码引导符，则直接yield所有待选项，不进入后续迭代，提升性能
         for cand in input:iter() do
-            if env.show_comment_normal then
+            if env.normal_comment then
                 local lookup_char = utf8.char_at(cand.text, utf8.len(cand.text))
                 if lookup_char and cand._end == #inputCode then  -- 需要完全匹配
-                    local auxCodes = AuxFilter.comment_db:lookup(lookup_char)
+                    local auxCodes = env.comment_db:lookup(lookup_char)
                     cand = append_comment(cand, auxCodes, lookup_char)
                 end
             end
@@ -344,17 +334,17 @@ function AuxFilter.func(input, env)
         local cand = _cand
         if #auxStr == 0 then
             local lookup_char = utf8.char_at(cand.text, 1)
-            if lookup_char then
-                cand = append_comment(cand, AuxFilter.comment_db:lookup(lookup_char), lookup_char)
+                    if lookup_char then
+                        cand = append_comment(cand, env.comment_db:lookup(lookup_char), lookup_char)
             end
             yield(to_yield_candidate(cand))
         elseif #auxStr > 0 and is_phrase_candidate(cand) then
-            local matched_count = find_phrase_match(cand.text, auxStr, env.length)
+            local matched_count = find_phrase_match(env, cand.text, auxStr, env.length)
             if matched_count > 0 then
                 if env.show_comment then
                     local lookup_char = utf8.char_at(cand.text, matched_count + ((#auxStr % env.length == 0 and 1) or 0))
                     if lookup_char then
-                        cand = append_comment(cand, AuxFilter.comment_db:lookup(lookup_char), lookup_char)
+                cand = append_comment(cand, env.comment_db:lookup(lookup_char), lookup_char)
                     end
                 end
                 yield(to_yield_candidate(cand))
@@ -365,6 +355,7 @@ end
 
 function AuxFilter.fini(env)
     env.notifier:disconnect()
+    collectgarbage('collect')
 end
 
 return AuxFilter

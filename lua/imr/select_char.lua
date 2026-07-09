@@ -23,8 +23,8 @@ function Processor.func(key, env)
             local input = context.input
             context:clear()
             -- 辅码触发
-            if input:match('(.*)`') ~= nil then
-                input = input:match('(.*)`')
+            if input:match('(.*);') ~= nil then
+                input = input:match('(.*);')
             end
             context:push_input(input)
             return 1
