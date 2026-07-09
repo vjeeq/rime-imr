@@ -56,7 +56,7 @@ engine:
     - fallback_segmentor
   translators:
     - punct_translator
-    - script_translator
+    - lua_translator@*imr.imr_script_translator@translator
     - lua_translator@*imr.select_char*Translator
     - lua_translator@*date_translator # 时间、日期、星期
     - table_translator@custom_phrase # 自定义短语 custom_phrase_t9.txt
@@ -66,6 +66,7 @@ engine:
     - lua_translator@*calc_translator    # 计算器
     - lua_translator@*force_gc           # 暴力 GC
   filters:
+    - lua_filter@*imr.tatata                           # 首字优先级排序
     - reverse_lookup_filter@reverse_lookup  # 部件拆字滤镜
     - lua_filter@*pin_cand_filter
     - simplifier@emoji # Emoji

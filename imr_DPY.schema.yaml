@@ -69,7 +69,7 @@ engine:
     - fallback_segmentor
   translators:
     - punct_translator
-    - lua_translator@*imr.hold_single_freq@translator
+    - lua_translator@*imr.imr_script_translator@translator
     - lua_translator@*date_translator    # 时间、日期、星期
     - lua_translator@*lunar              # 农历
     - lua_translator@*uuid               # UUID
