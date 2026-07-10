@@ -28,6 +28,25 @@ schema:
     - imr_auxcode_comment
 
 
+# hub 模式触发配置
+hub:
+  date:
+    date: "date"
+    time: "time"
+    week: "week"
+    datetime: "datetime"
+    timestamp: "timestamp"
+    datezh: "datezh"
+    dateen: "dateen"
+  lunar:
+    today: "lunar"
+    convert: "N"
+  unicode: "U"
+  number: "R"
+  calculator: "cC"
+  uuid: "uuid"
+
+
 # 开关
 # reset: 默认状态。注释掉后，切换窗口时不会重置到默认状态。
 # states: 方案选单显示的名称。可以注释掉，仍可以通过快捷键切换。
@@ -70,16 +89,11 @@ engine:
   translators:
     - punct_translator
     - lua_translator@*imr.imr_script_translator@translator
-    - lua_translator@*date_translator    # 时间、日期、星期
-    - lua_translator@*lunar              # 农历
-    - lua_translator@*uuid               # UUID
+    - lua_translator@*imr.hub
+    - lua_translator@*imr.gc
     - table_translator@custom_phrase     # 自定义短语 custom_phrase_double.txt
     - table_translator@cn_en             # 中英混合词汇
     - table_translator@radical_lookup    # 部件拆字反查
-    - lua_translator@*unicode            # Unicode
-    - lua_translator@*number_translator  # 数字、金额大写
-    - lua_translator@*calc_translator    # 计算器
-    - lua_translator@*force_gc           # 暴力 GC
   filters:
     - lua_filter@*imr.tatata                           # 首字优先级排序
     - lua_filter@*corrector                         # 错音错字提示
@@ -91,25 +105,6 @@ engine:
     - simplifier@traditionalize                     # 简繁切换
     - lua_filter@*imr.aux_code
     - uniquifier                                    # 去重
-
-
-# Lua 配置: 日期、时间、星期、ISO 8601、时间戳的触发关键字
-date_translator:
-  date: date            # 日期： 2022-11-29
-  time: time            # 时间： 18:13
-  week: week            # 星期： 星期二
-  datetime: datetime    # ISO 8601： 2022-11-29T18:13:11+08:00
-  timestamp: timestamp  # 时间戳： 1669716794
-  datezh: datezh        # 中文日期： 二〇二六年二月二十五日 | 二零二六年二月二十五日
-  dateen: dateen        # 英文日期： 英式 8 March 2026 | 美式 March 8, 2026
-
-
-# Lua 配置：农历的触发关键字
-lunar: lunar  # 农历： 二〇二三年冬月二十 癸卯年（兔）冬月二十
-
-
-# Lua 配置: 生成 UUID 的触发关键字
-uuid: uuid
 
 
 # Lua 配置: 降低部分英语单词在候选项的位置。

@@ -34,6 +34,17 @@ schema:
     - imr_T93_auxcode
     - imr_auxcode_comment
 
+hub:
+  date:
+    date: "date"
+    time: "time"
+    week: "week"
+    datetime: "datetime"
+    timestamp: "timestamp"
+    datezh: "datezh"
+    dateen: "dateen"
+  calculator: "="
+
 engine:
   processors:
     - lua_processor@*imr.T93_processor
@@ -58,13 +69,12 @@ engine:
     - punct_translator
     - lua_translator@*imr.imr_script_translator@translator
     - lua_translator@*imr.select_char*Translator
-    - lua_translator@*date_translator # 时间、日期、星期
+    - lua_translator@*imr.hub
+    - lua_translator@*imr.gc
     - table_translator@custom_phrase # 自定义短语 custom_phrase_t9.txt
     # - table_translator@melt_eng     # 英文输入
     - table_translator@radical_lookup    # 部件拆字反查
     - table_translator@stroke_lookup     # 笔画拆字反查
-    - lua_translator@*calc_translator    # 计算器
-    - lua_translator@*force_gc           # 暴力 GC
   filters:
     - lua_filter@*imr.tatata                           # 首字优先级排序
     - reverse_lookup_filter@reverse_lookup  # 部件拆字滤镜

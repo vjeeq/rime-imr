@@ -310,7 +310,7 @@ function AuxFilter.func(input, env)
     if mode == "none" then
         -- 没有输入辅助码引导符，则直接yield所有待选项，不进入后续迭代，提升性能
         for cand in input:iter() do
-            if env.normal_comment then
+            if env.normal_comment and cand.type ~= "hub" then
                 local lookup_char = utf8.char_at(cand.text, utf8.len(cand.text))
                 if lookup_char and cand._end == #inputCode then  -- 需要完全匹配
                     local auxCodes = env.comment_db:lookup(lookup_char)
