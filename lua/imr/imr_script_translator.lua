@@ -20,11 +20,14 @@ function M.init(env)
         if not ok then return end
 
         -- ━━━ 词频规则 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        -- 单字上屏不记录词频（c=-1）
+        -- 单字不记录词频(c=-1) (无论是单字上屏还是多字上屏)
         -- 后续规则追加在此
-        local e = commits:get()
-        if e[1] and not e[2] and utf8.len(e[1].text) == 1 then
-            commits:update_entry(e[1], -1, "")
+        local items = commits:get()
+        for i = 1, #items do
+            local item = items[i]
+            if item and utf8.len(item.text) == 1 then
+                commits:update_entry(item, -1, "")
+            end
         end
         -- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     end
