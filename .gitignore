@@ -27,3 +27,4 @@ imr_grammar.yaml
 dicts/*
 downloads/*
 etags/*
+ignored
