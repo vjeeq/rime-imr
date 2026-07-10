@@ -1,14 +1,11 @@
--- imr_script_translator — 包装原生 ScriptTranslator，复用 translator: 配置块。
---
--- 当前功能：单独上屏的单字不记录词频（c=-1）。
---
--- 干预 Memorize 回调以实现自定义词频规则。
---
--- 机制：env.tran（shared_ptr）捕获于闭包，绕过 callback 中 self（裸指针）的類型限制。
--- 回调：清空 callback → 原生 Memorize（合并条目/UpdateElements/语法模型）→ 恢复 callback。
---
--- 用法：在 schema 的 engine/translators 中替换 script_translator：
---       lua_translator@*imr.imr_script_translator@translator
+-- 包装原生 ScriptTranslator，拦截词频记录回调。
+-- 在此添加自定义词频规则：
+--   - 单字上屏不记词频（当前）
+--   - 特定词条强制固定频率
+--   - 条件性高低频调整
+-- 用法：lua_translator@*imr.imr_script_translator@translator
+
+if not utf8 then utf8 = require("utf8") end
 
 local M = {}
 
@@ -17,18 +14,19 @@ function M.init(env)
     local tran = env.tran
 
     local function memorize_callback(self, commits)
-        tran:set_memorize_callback(nil)
-        tran:memorize(commits)
+        tran:set_memorize_callback(function() end)
+        local ok = pcall(tran.memorize, tran, commits)
         tran:set_memorize_callback(memorize_callback)
+        if not ok then return end
 
-        -- ━━━ 词频规则 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        -- ★ 不记录单独上屏的单字词频（压回 c=-1）
-        --   以后加其他规则也放在这个 block 里
-        local entries = commits:get()
-        if #entries == 1 and utf8.len(entries[1].text) == 1 then
-            commits:update_entry(entries[1], -1, "")
+        -- ━━━ 词频规则 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        -- 单字上屏不记录词频（c=-1）
+        -- 后续规则追加在此
+        local e = commits:get()
+        if e[1] and not e[2] and utf8.len(e[1].text) == 1 then
+            commits:update_entry(e[1], -1, "")
         end
-        -- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        -- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     end
 
     tran:set_memorize_callback(memorize_callback)
