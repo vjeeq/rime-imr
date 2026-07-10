@@ -10,17 +10,22 @@ calcPlugin["rdm"] = random
 calcPlugin["random"] = random
 
 calcPlugin["sin"] = function(x) return math.sin(x) end
+---@diagnostic disable-next-line: deprecated
 calcPlugin["sinh"] = function(x) return math.sinh(x) end
 calcPlugin["asin"] = function(x) return math.asin(x) end
 calcPlugin["cos"] = function(x) return math.cos(x) end
+---@diagnostic disable-next-line: deprecated
 calcPlugin["cosh"] = function(x) return math.cosh(x) end
 calcPlugin["acos"] = function(x) return math.acos(x) end
 calcPlugin["tan"] = function(x) return math.tan(x) end
+---@diagnostic disable-next-line: deprecated
 calcPlugin["tanh"] = function(x) return math.tanh(x) end
 calcPlugin["atan"] = function(x) return math.atan(x) end
+---@diagnostic disable-next-line: deprecated
 calcPlugin["atan2"] = function(y, x) return math.atan2(y, x) end
 calcPlugin["deg"] = function(x) return math.deg(x) end
 calcPlugin["rad"] = function(x) return math.rad(x) end
+---@diagnostic disable-next-line: deprecated
 calcPlugin["ldexp"] = function(x, y) return math.ldexp(x, y) end
 calcPlugin["exp"] = function(x) return math.exp(x) end
 calcPlugin["sqrt"] = function(x) return math.sqrt(x) end
@@ -34,6 +39,7 @@ calcPlugin["loge"] = function(x)
 end
 calcPlugin["log10"] = function(x)
     if x <= 0 then return nil end
+    ---@diagnostic disable-next-line: deprecated
     return math.log10(x)
 end
 calcPlugin["avg"] = function(...)
@@ -63,6 +69,7 @@ calcPlugin["fact"] = function(x)
     return result
 end
 calcPlugin["frexp"] = function(x)
+    ---@diagnostic disable-next-line: deprecated
     local m, e = math.frexp(x)
     return m .. " * 2^" .. e
 end
