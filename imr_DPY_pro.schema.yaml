@@ -2,7 +2,6 @@ __include: imr_DPY.schema.yaml:/
 schema:
   schema_id: imr_DPY_pro
   name: IMR-双拼-PRO
-__patch:
-  translator/prism: imr_DPY_pro
-  speller/algebra:
-    __include: imr_config:/speller/algebra/imr_DPY_pro
+translator/prism: imr_DPY_pro
+speller/algebra:
+  __include: imr_config:/speller/algebra/imr_DPY_pro
