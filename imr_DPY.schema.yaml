@@ -96,7 +96,6 @@ engine:
     - table_translator@radical_lookup    # 部件拆字反查
   filters:
     - lua_filter@*imr.tatata                           # 首字优先级排序
-    - lua_filter@*corrector                         # 错音错字提示
     - reverse_lookup_filter@radical_reverse_lookup  # 部件拆字滤镜
     - lua_filter@*autocap_filter                    # 英文自动大写
     - lua_filter@*pin_cand_filter                   # 置顶候选项（顺序要求：置顶候选项 > Emoji > 简繁切换）
@@ -152,13 +151,9 @@ translator:
   dictionary: wanxiang          # 挂载词库 rime_ice.dict.yaml
   enable_word_completion: true  # 大于 4 音节的词条自动补全，librime > 1.11.2
   prism: imr_DPY                # 多方案共用一个词库时，为避免冲突，需要用 prism 指定一个名字。
-  spelling_hints: 8             # corrector.lua ：为了让错音错字提示的 Lua 同时适配全拼双拼，将拼音显示在 comment 中
-  always_show_comments: false   # corrector.lua ：Rime 默认在 preedit 等于 comment 时取消显示 comment，这里强制一直显示，供 corrector.lua 做判断用。
+  spelling_hints: none
   initial_quality: 1.2          # 拼音的权重应该比英文大
-  comment_format:               # 标记拼音注释，供 corrector.lua 做判断用
-    - xform/^/［/
-    - xform/$/］/
-  preedit_format:               # 拼音的预编辑格式，供 corrector.lua 做判断用
+  preedit_format:
     - xform/00/⁰/
     - xform/7/¹/
     - xform/8/²/

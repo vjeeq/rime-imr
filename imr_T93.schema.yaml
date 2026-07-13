@@ -102,7 +102,6 @@ translator:
   prism: imr_T93
   dictionary: wanxiang
   spelling_hints: none
-  comment_format: []
   # 显示原始输入
   preedit_format:
     __include: imr_config:/translator/preedit_format/imr_T93
