@@ -100,7 +100,7 @@ recognizer:
 
 translator:
   prism: imr_T93
-  dictionary: wanxiang
+  dictionary: imr_cn
   spelling_hints: none
   # 显示原始输入
   preedit_format:
@@ -165,7 +165,7 @@ stroke_lookup:
 # 拆字滤镜
 reverse_lookup:
   tags: [ radical_lookup, stroke_lookup ]
-  dictionary: wanxiang
+  dictionary: imr_cn
   comment_format:
     __include: imr_config:/translator/comment_format/万象
 
