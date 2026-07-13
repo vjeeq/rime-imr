@@ -297,6 +297,5 @@ aux:
   normal_comment: true
   comment_db: imr_auxcode_comment
 
-__patch:
-  imr_grammar:/
+__include: imr_grammar:/
 

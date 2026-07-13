@@ -114,9 +114,11 @@ const TRANSFORMER = {
         const source_json = YAML_JS.load(source)
         const target_json = {}
         target_json.grammar = source_json.grammar
-        target_json['translator/contextual_suggestions'] = false
-        target_json['translator/max_homophones'] = source_json.translator.max_homophones
-        target_json['translator/max_homographs'] = source_json.translator.max_homographs
+        target_json.translator = {
+            contextual_suggestions: false,
+            max_homophones: source_json.translator.max_homophones,
+            max_homographs: source_json.translator.max_homographs,
+        }
         const target = YAML_JS.dump(target_json)
         return { grammar: target }
     }

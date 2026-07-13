@@ -180,5 +180,4 @@ aux:
 menu:
   alternative_select_keys: ABCDEFGHIJ
 
-__patch:
-  imr_grammar:/
+__include: imr_grammar:/
