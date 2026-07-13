@@ -242,10 +242,9 @@ end
 
 local function append_comment(cand, auxCodes, char)
     local comment = auxCodes:gsub(' ', ',')
-    if char ~= '' then
-        comment = char .. ':' .. comment
-    end
-    -- comment = '(' .. comment .. ')'
+    -- if char ~= '' then
+        -- comment = char .. ':' .. comment
+    -- end
     -- 处理 simplifier
     if cand:get_dynamic_type() == 'Shadow' then
         local shandow_cand = cand
