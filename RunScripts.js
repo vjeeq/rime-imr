@@ -1,7 +1,7 @@
 const path = require('path')
 const PROJECT_ROOT = __dirname;
-const updateFiles = require(path.join(PROJECT_ROOT, 'scripts', 'update_files'));
-const transform = require(path.join(PROJECT_ROOT, 'scripts', 'local_transform'));
+const updateFiles = require(path.join(PROJECT_ROOT, 'scripts', 'download'));
+const transform = require(path.join(PROJECT_ROOT, 'scripts', 'transform'));
 
 const args = process.argv.slice(2);
 // 使用异步函数确保顺序执行

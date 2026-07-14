@@ -41,7 +41,7 @@ const files = {
 // 同步远程数据
 
 
-const checkAndUpdateFile = require(path.join(PROJECT_ROOT, 'scripts', '_remote_check'));
+const checkAndUpdateFile = require(path.join(PROJECT_ROOT, 'scripts', 'utils', 'fetch'));
 
 
 

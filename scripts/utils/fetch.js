@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const PROJECT_ROOT = path.join(__dirname, '..');
+const PROJECT_ROOT = path.join(__dirname, '..', '..');
 
 function etagPath(localPath) {
     return path.join(PROJECT_ROOT, 'etags', localPath + '.etag');
