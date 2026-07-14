@@ -33,6 +33,7 @@ schema:
     - imr_T93_stroke
     - imr_T93_auxcode
     - imr_auxcode_comment
+    - imr_T93_source
 
 hub:
   date:

@@ -26,6 +26,7 @@ schema:
     - imr_DPY_radical_pinyin     # 部件拆字，反查及辅码
     - imr_DPY_auxcode
     - imr_auxcode_comment
+    - imr_DPY_source
 
 
 # hub 模式触发配置

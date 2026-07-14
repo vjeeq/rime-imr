@@ -1,0 +1,11 @@
+# Rime dictionary
+# encoding: utf-8
+#
+# 自然码双拼来�?
+
+---
+name: imr_DPY_source
+version: zzz
+import_tables:
+  - dicts/lookup/SOURCE_DPY
+...

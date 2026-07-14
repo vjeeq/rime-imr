@@ -1,0 +1,9 @@
+# Rime schema settings
+# encoding: utf-8
+
+schema:
+  schema_id: imr_T93_source
+  name: imr-拼音源-T93
+  version: zzz
+translator:
+  dictionary: imr_T93_source

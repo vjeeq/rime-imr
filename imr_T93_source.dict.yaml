@@ -1,0 +1,11 @@
+# Rime dictionary
+# encoding: utf-8
+#
+# T93 数字编码来�?
+
+---
+name: imr_T93_source
+version: zzz
+import_tables:
+  - dicts/lookup/SOURCE_T93
+...
