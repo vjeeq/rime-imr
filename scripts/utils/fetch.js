@@ -33,21 +33,25 @@ async function downloadStream(response) {
     let received = 0;
     let lastLog = 0;
 
-    while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+    try {
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
 
-        chunks.push(value);
-        received += value.length;
+            chunks.push(value);
+            received += value.length;
 
-        const now = Date.now();
-        if (now - lastLog > 2000) {
-            const pct = ((received / total) * 100).toFixed(1);
-            const mb = (received / (1024 * 1024)).toFixed(1);
-            const tmb = (total / (1024 * 1024)).toFixed(1);
-            console.log(`下载进度: ${pct}% (${mb} MB / ${tmb} MB)`);
-            lastLog = now;
+            const now = Date.now();
+            if (now - lastLog > 2000) {
+                const pct = ((received / total) * 100).toFixed(1);
+                const mb = (received / (1024 * 1024)).toFixed(1);
+                const tmb = (total / (1024 * 1024)).toFixed(1);
+                console.log(`下载进度: ${pct}% (${mb} MB / ${tmb} MB)`);
+                lastLog = now;
+            }
         }
+    } catch (err) {
+        throw new Error(`下载过程中连接中断: ${err.message}`);
     }
 
     const buf = new Uint8Array(received);
@@ -97,6 +101,7 @@ async function syncFile(url, localPath) {
     }
 
     console.log('[下载]', url, localPath);
+    if (!response.body) throw new Error(`响应无数据: ${response.status}`);
     const buffer = Buffer.from(await downloadStream(response));
     try {
         fs.writeFileSync(fullPath, buffer);
@@ -105,8 +110,12 @@ async function syncFile(url, localPath) {
         console.error('保存文件时出错：', err);
         fs.writeFileSync(fullPath + '.tmp', buffer);
         console.log('文件已保存到', localPath + '.tmp');
+        if (newETag) saveETag(localPath, newETag);
+        console.log(`[更新] 新 ETag: ${newETag}`);
+        console.log('=============================');
+        return { ok: true, warn: true };
     }
-    saveETag(localPath, newETag);
+    if (newETag) saveETag(localPath, newETag);
     console.log(`[更新] 新 ETag: ${newETag}`);
     console.log('=============================');
     return true;

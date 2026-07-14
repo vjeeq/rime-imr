@@ -53,6 +53,7 @@ async function updateFiles(type = 'All') {
     let successCount = 0;
     let totalCount = 0;
     let skipCount = 0;
+    let hasWarn = false;
 
     // 遍历所有配置的文件
     for (const [filePath, remoteUrl] of Object.entries(files)) {
@@ -61,8 +62,9 @@ async function updateFiles(type = 'All') {
             const isWanxiang = remoteUrl.startsWith('https://cnb.cool');
             const isFirstDownload = !fs.existsSync(path.join(PROJECT_ROOT, filePath));
             try {
-                const success = await checkAndUpdateFile(remoteUrl, filePath);
-                if (success) successCount++;
+                const result = await checkAndUpdateFile(remoteUrl, filePath);
+                if (result?.warn) hasWarn = true;
+                if (result) successCount++;
             } catch (err) {
                 if (isWanxiang) {
                     console.error(`\n[严重错误] 万象文件 ${filePath} 同步失败，终止流程`);
@@ -84,6 +86,7 @@ async function updateFiles(type = 'All') {
     if (skipCount > 0) {
         console.log(`⚠ ${skipCount} 个GitHub文件更新失败，已跳过`);
     }
+    return { totalCount, successCount, skipCount, hasWarn };
 }
 
 // 导出函数以便在其他脚本中使用

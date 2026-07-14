@@ -39,9 +39,11 @@ const TRANSFORMER = {
                 if (code.length >= 2) {
                     const en1 = code.charAt(0);
                     const en2 = code.charAt(1);
-                    const number1 = T93_EN_NUM[en1][0];
-                    const number2 = T93_EN_NUM[en2][0];
-                    const number3 = (T93_EN_NUM[en1][1] - 1) * 3 + (T93_EN_NUM[en2][1]);
+                    const p1 = T93_EN_NUM[en1], p2 = T93_EN_NUM[en2];
+                    if (!p1 || !p2) return [cn, code, undefined];
+                    const number1 = p1[0];
+                    const number2 = p2[0];
+                    const number3 = (p1[1] - 1) * 3 + p2[1];
                     return [cn, code, [`${number1}${number2}${number3}`, `${number1}${number2}0`]]
                 }
                 return [cn, code, undefined]
@@ -88,7 +90,7 @@ const TRANSFORMER = {
             .map(({ key, context }) => {
                 let source_lines = context.split('\n');
                 let shift = undefined;
-                while ((shift = source_lines.shift()) != '...' && shift != undefined);
+                while ((shift = source_lines.shift()) !== '...' && shift !== undefined);
                 return {
                     key, context: source_lines
                         .map(line => line.trim())
@@ -116,8 +118,8 @@ const TRANSFORMER = {
         target_json.grammar = source_json.grammar
         target_json.translator = {
             contextual_suggestions: false,
-            max_homophones: source_json.translator.max_homophones,
-            max_homographs: source_json.translator.max_homographs,
+            max_homophones: source_json.translator?.max_homophones,
+            max_homographs: source_json.translator?.max_homographs,
         }
         const target = YAML_JS.dump(target_json)
         return { grammar: target }
@@ -297,7 +299,12 @@ function work() {
         const source_map = {}
         Object.keys(source).forEach(source_key => {
             const source_file = path.join(__dirname, '..', source[source_key]);
-            source_map[source_key] = fs.readFileSync(source_file, 'utf8');
+            try {
+                source_map[source_key] = fs.readFileSync(source_file, 'utf8');
+            } catch (err) {
+                console.error(`读取源文件失败: ${source_file}`);
+                throw err;
+            }
         })
         const target_map = transform(source_map)
         Object.keys(target_map).forEach(target_key => {
@@ -314,12 +321,6 @@ function work() {
             ].join('\n') : '') + '\n' + target_map[target_key], 'utf8');
             console.log('文件已成功写入', target_file)
         })
-        //     const source_lineses = source_file.map(file => {
-        //         const context = fs.readFileSync(file, 'utf8');
-        //         return context.split('\n');
-        //     })
-        //     const target_lines = transform(source_lineses)
-        //     // 写入新文件
     })
 }
 
