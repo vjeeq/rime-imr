@@ -15,9 +15,9 @@ const files = {
     // 'dicts/ice/en_ext.dict.yaml': 'https://raw.githubusercontent.com/iDvel/rime-ice/main/en_dicts/en_ext.dict.yaml',
     // 'dicts/ice/en.dict.yaml': 'https://raw.githubusercontent.com/iDvel/rime-ice/main/en_dicts/en.dict.yaml',
     //// 拼音拆字
-    'dicts/lookup/radical_pinyin.dict.yaml': 'https://raw.githubusercontent.com/mirtlecn/rime-radical-pinyin/master/radical_pinyin.dict.yaml',
+    'dicts/lookup/radical_pinyin.dict.yaml': 'https://cdn.jsdelivr.net/gh/mirtlecn/rime-radical-pinyin@master/radical_pinyin.dict.yaml',
     //// 笔画
-    'dicts/lookup/stroke.dict.yaml': 'https://raw.githubusercontent.com/rime/rime-stroke/master/stroke.dict.yaml',
+    'dicts/lookup/stroke.dict.yaml': 'https://cdn.jsdelivr.net/gh/rime/rime-stroke@master/stroke.dict.yaml',
     //// 万象
     'dicts/wanxiang/zi.dict.yaml': 'https://cnb.cool/amzxyz/rime-wanxiang/-/git/raw/wanxiang/dicts/zi.dict.yaml',
     'dicts/wanxiang/jichu.dict.yaml': 'https://cnb.cool/amzxyz/rime-wanxiang/-/git/raw/wanxiang/dicts/jichu.dict.yaml',
@@ -35,7 +35,7 @@ const files = {
     //// 万象方案(同步模型参数用)
     'downloads/wanxiang/wanxiang.schema.yaml': 'https://cnb.cool/amzxyz/rime-wanxiang/-/git/raw/wanxiang/wanxiang.schema.yaml',
     // rime-lua类型声明
-    'lua/librime.lua': 'https://raw.githubusercontent.com/hchunhui/librime-lua/master/contrib/librime.lua',
+    'lua/librime.lua': 'https://cdn.jsdelivr.net/gh/hchunhui/librime-lua@master/contrib/librime.lua',
 };
 
 // 同步远程数据
