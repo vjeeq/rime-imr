@@ -121,9 +121,108 @@ const TRANSFORMER = {
         }
         const target = YAML_JS.dump(target_json)
         return { grammar: target }
+    },
+    wanxiang_source(source_map) {
+        const TONE_TABLE = {
+            'ā': ['a', 1], 'á': ['a', 2], 'ǎ': ['a', 3], 'à': ['a', 4],
+            'ē': ['e', 1], 'é': ['e', 2], 'ě': ['e', 3], 'è': ['e', 4],
+            'ī': ['i', 1], 'í': ['i', 2], 'ǐ': ['i', 3], 'ì': ['i', 4],
+            'ō': ['o', 1], 'ó': ['o', 2], 'ǒ': ['o', 3], 'ò': ['o', 4],
+            'ū': ['u', 1], 'ú': ['u', 2], 'ǔ': ['u', 3], 'ù': ['u', 4],
+            'ǖ': ['v', 1], 'ǘ': ['v', 2], 'ǚ': ['v', 3], 'ǜ': ['v', 4],
+            'ń': ['n', 2], 'ň': ['n', 3], 'ǹ': ['n', 4],
+            'ḿ': ['m', 2], 'm̀': ['m', 4],
+        };
+        const TONE_RE = /ā|á|ǎ|à|ē|é|ě|è|ī|í|ǐ|ì|ō|ó|ǒ|ò|ū|ú|ǔ|ù|ǖ|ǘ|ǚ|ǜ|ń|ň|ǹ|ḿ|m̀/;
+        const XFORM = [
+            [/^([aoe])(ng)?$/, '$1$1$2'],
+            [/iu$/, 'Q'],
+            [/[iu]a$/, 'W'],
+            [/[uv]an$/, 'R'],
+            [/[uv]e$/, 'T'],
+            [/ing$|uai$/, 'Y'],
+            [/^sh/, 'U'],
+            [/^ch/, 'I'],
+            [/^zh/, 'V'],
+            [/uo$/, 'O'],
+            [/[uv]n$/, 'P'],
+            [/(.)i?ong$/, '$1S'],
+            [/[iu]ang$/, 'D'],
+            [/(.)en$/, '$1F'],
+            [/(.)eng$/, '$1G'],
+            [/(.)ang$/, '$1H'],
+            [/ian$/, 'M'],
+            [/(.)an$/, '$1J'],
+            [/iao$/, 'C'],
+            [/(.)ao$/, '$1K'],
+            [/(.)ai$/, '$1L'],
+            [/(.)ei$/, '$1Z'],
+            [/ie$/, 'X'],
+            [/ui$/, 'V'],
+            [/(.)ou$/, '$1B'],
+            [/in$/, 'N'],
+        ];
+        const toNaturalCode = sp => XFORM.reduce((s, [p, r]) => s.replace(p, r), sp).toLowerCase();
+        const TONE_DPY = { 1: '1', 2: '2', 3: '3', 4: '4', 5: '5' };
+        const TONE_T93 = { 1: 'a', 2: 'b', 3: 'c', 4: 'd', 5: 'e' };
+
+        const lines = source_map.zi.split('\n');
+        let DPY = '', T93 = '';
+
+        for (const line of lines) {
+            const parts = line.trim().split('\t');
+            if (parts.length < 2 || parts[0].startsWith('#')) {
+                continue;
+            }
+            const cn = parts[0];
+            let pinyin = parts[1];
+
+            // 提取声调
+            let tone = 5;
+            const tm = pinyin.match(TONE_RE);
+            if (tm) {
+                const [b, t] = TONE_TABLE[tm[0]];
+                tone = t;
+                pinyin = pinyin.replace(tm[0], b);
+            }
+
+            pinyin = pinyin.replace(/^ng$/, 'eng').replace(/^n$/, 'en').replace(/^m$/, 'me');
+
+            // 全拼 → 自然码 (algebra)
+            const d1 = /^([jqxy])u$/.exec(pinyin);
+            const d2 = /^([aoe])([ioun])$/.exec(pinyin);
+            const codes = [...new Set(
+                [pinyin, d1 && d1[1] + 'v', d2 && d2[1] + d2[1] + d2[2]].filter(Boolean).map(toNaturalCode)
+            )];
+
+            codes.forEach(sp => {
+                DPY += `${cn}\t${sp}${TONE_DPY[tone]}\n`;
+                const [r1, c1] = T93_EN_NUM[sp[0]] || [], [r2, c2] = T93_EN_NUM[sp[1]] || [];
+                const t93 = r1 && r2 ? '' + r1 + r2 + ((c1 - 1) * 3 + c2) : '';
+                T93 += `${cn}\t${t93}${TONE_T93[tone]}\n`;
+            });
+        }
+        return { DPY, T93 };
     }
 }
 const files = [
+    {
+        // 万象原始字拼音
+        source: {
+            zi: 'dicts/wanxiang/zi.dict.yaml',
+        },
+        target: {
+            DPY: {
+                file: 'dicts/lookup/SOURCE_DPY.dict.yaml',
+                name: 'SOURCE_DPY',
+            },
+            T93: {
+                file: 'dicts/lookup/SOURCE_T93.dict.yaml',
+                name: 'SOURCE_T93',
+            },
+        },
+        transform: TRANSFORMER.wanxiang_source,
+    },
     {  // 万象辅助码 => 辅助码字典
         source: {
             txt: 'downloads/wanxiang/aux_code.txt',
