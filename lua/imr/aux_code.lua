@@ -67,7 +67,7 @@ function AuxFilter.init(env)
     local engine = env.engine
     local config = engine.schema.config
 
-    env.db = ReverseLookup(config:get_string('aux/db'))
+    env.db = ReverseLookup(config:get_string('db/aux'))
 
     env.learn_trigger = normalize_trigger(config:get_string("aux/trigger"), nil) or ";"
     env.no_learn_trigger = normalize_trigger(config:get_string("aux/no_learn_trigger"), "")
@@ -101,7 +101,7 @@ function AuxFilter.init(env)
     if env.show_comment == nil then env.show_comment = true end
     env.normal_comment = config:get_bool("aux/normal_comment") or false
     if env.show_comment then
-        env.comment_db = ReverseLookup(config:get_string('aux/comment_db'))
+        env.comment_db = ReverseLookup(config:get_string('db/aux_comment'))
     end
 
     ----------------------------
