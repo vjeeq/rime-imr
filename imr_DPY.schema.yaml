@@ -72,6 +72,7 @@ switches:
 engine:
   processors:
     - lua_processor@*imr.DPY_processor
+    - lua_processor@*imr.select_char*Processor
     - ascii_composer
     - recognizer
     - key_binder
@@ -91,6 +92,7 @@ engine:
     - punct_translator
     - lua_translator@*imr.imr_script_translator@translator
     - lua_translator@*imr.hub
+    - lua_translator@*imr.select_char*Translator
     - lua_translator@*imr.gc
     - table_translator@custom_phrase     # 自定义短语 custom_phrase_double.txt
     - table_translator@cn_en             # 中英混合词汇
@@ -104,6 +106,7 @@ engine:
     - simplifier@emoji                              # Emoji
     - simplifier@traditionalize                     # 简繁切换
     - lua_filter@*imr.aux_code
+    - lua_filter@*imr.select_char*Filter
     - uniquifier                                    # 去重
 
 
@@ -282,7 +285,7 @@ editor:
 # 拼写设定
 speller:
   # 如果不想让什么标点直接上屏，可以加在 alphabet，或者编辑标点符号为两个及以上的映射
-  alphabet: zyxwvutsrqponmlkjihgfedcbaZYXWVUTSRQPONMLKJIHGFEDCBA;7890/
+  alphabet: zyxwvutsrqponmlkjihgfedcbaZYXWVUTSRQPONMLKJIHGFEDCBA;7890/?-
   # initials 定义仅作为始码的按键，排除 ` 让单个的 ` 可以直接上屏
   initials: zyxwvutsrqponmlkjihgfedcbaZYXWVUTSRQPONMLKJIHGFEDCBA
   delimiter: " '"  # 第一位<空格>是拼音之间的分隔符；第二位<'>表示可以手动输入单引号来分割拼音。
@@ -297,6 +300,9 @@ aux:
   show_comment: true
   normal_comment: true
   comment_db: imr_auxcode_comment
+
+select_char:
+  pinyin_db: imr_DPY_source
 
 __include: imr_grammar:/
 
