@@ -94,10 +94,9 @@ engine:
     - lua_translator@*imr.imr_script_translator@translator
     - lua_translator@*imr.hub
     - lua_translator@*imr.select_char*Translator
-    - lua_translator@*imr.gc
-    - table_translator@custom_phrase     # 自定义短语 custom_phrase_double.txt
-    - table_translator@imr_en           # 英文输入
+    - table_translator@imr_en            # 英文输入
     - table_translator@radical_lookup    # 部件拆字反查
+    - lua_translator@*imr.gc
   filters:
     - lua_filter@*imr.tatata                           # 首字优先级排序
     - reverse_lookup_filter@radical_reverse_lookup  # 部件拆字滤镜
@@ -108,10 +107,6 @@ engine:
     - lua_filter@*imr.aux_code
     - lua_filter@*imr.select_char*Filter
     - uniquifier                                    # 去重
-
-
-# Lua 配置: 置顶候选项
-# 注释太长了，请参考 pin_cand_filter.lua 开头的说明书。
 
 
 # 主翻译器，拼音
@@ -136,16 +131,6 @@ imr_en:
   initial_quality: 0.8    # 初始权重（中文 1.2）
   comment_format:         # 自定义提示码
     - xform/.*//          # 清空提示码
-
-
-# 自定义短语
-custom_phrase:
-  dictionary: ""
-  user_dict: custom_phrase_double  # 需要手动创建 custom_phrase_double.txt 文件
-  db_class: stabledb
-  enable_completion: false # 补全提示
-  enable_sentence: false   # 禁止造句
-  initial_quality: 99      # custom_phrase 的权重应该比 pinyin 和 melt_eng 大
 
 
 # Emoji

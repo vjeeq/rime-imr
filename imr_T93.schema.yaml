@@ -72,7 +72,6 @@ engine:
     - lua_translator@*imr.select_char*Translator
     - lua_translator@*imr.hub
     - lua_translator@*imr.gc
-    - table_translator@custom_phrase # 自定义短语 custom_phrase_t9.txt
     # - table_translator@melt_eng     # 英文输入
     - table_translator@radical_lookup    # 部件拆字反查
     - table_translator@stroke_lookup     # 笔画拆字反查
@@ -107,15 +106,6 @@ translator:
   preedit_format:
     __include: imr_config:/translator/preedit_format/imr_T93
 
-# 自定义短语：custom_phrase_t9.txt
-# ⚠️ 编码要用数字
-custom_phrase:
-  dictionary: ""
-  user_dict: custom_phrase_t9
-  db_class: stabledb
-  enable_completion: false
-  enable_sentence: false
-  initial_quality: 99
 
 # 从 default 继承快捷键
 key_binder:
