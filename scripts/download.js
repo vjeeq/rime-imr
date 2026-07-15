@@ -36,6 +36,9 @@ const files = {
     'downloads/ice/cn_en_double_pinyin.txt': 'https://cdn.jsdelivr.net/gh/iDvel/rime-ice@main/en_dicts/cn_en_double_pinyin.txt',
     //// 雾凇符号
     'symbols_caps_v.yaml': 'https://cdn.jsdelivr.net/gh/iDvel/rime-ice@main/symbols_caps_v.yaml',
+    //// 雾凇emoji
+    'opencc/emoji.txt': 'https://cdn.jsdelivr.net/gh/iDvel/rime-ice@main/opencc/emoji.txt',
+    'opencc/others.txt': 'https://cdn.jsdelivr.net/gh/iDvel/rime-ice@main/opencc/others.txt',
     //// 万象模型
     'wanxiang-lts-zh-hans.gram': 'https://cnb.cool/amzxyz/rime-wanxiang/-/releases/download/model/wanxiang-lts-zh-hans.gram',
     //// 万象方案(同步模型参数用)

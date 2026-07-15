@@ -28,4 +28,5 @@ symbols_caps_v.yaml
 dicts/*
 downloads/*
 etags/*
+opencc/*
 ignored
