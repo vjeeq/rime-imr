@@ -24,6 +24,7 @@ rime_patch
 
 wanxiang-lts-zh-hans.gram
 imr_grammar.yaml
+symbols_caps_v.yaml
 dicts/*
 downloads/*
 etags/*

@@ -34,6 +34,8 @@ const files = {
     'downloads/ice/en.dict.yaml': 'https://cdn.jsdelivr.net/gh/iDvel/rime-ice@main/en_dicts/en.dict.yaml',
     'downloads/ice/en_ext.dict.yaml': 'https://cdn.jsdelivr.net/gh/iDvel/rime-ice@main/en_dicts/en_ext.dict.yaml',
     'downloads/ice/cn_en_double_pinyin.txt': 'https://cdn.jsdelivr.net/gh/iDvel/rime-ice@main/en_dicts/cn_en_double_pinyin.txt',
+    //// 雾凇符号
+    'symbols_caps_v.yaml': 'https://cdn.jsdelivr.net/gh/iDvel/rime-ice@main/symbols_caps_v.yaml',
     //// 万象模型
     'wanxiang-lts-zh-hans.gram': 'https://cnb.cool/amzxyz/rime-wanxiang/-/releases/download/model/wanxiang-lts-zh-hans.gram',
     //// 万象方案(同步模型参数用)
