@@ -1,12 +1,6 @@
 # Rime schema
 # encoding: utf-8
 
-# 适配了仓输入法 [Hamster](https://github.com/imfuxiao/Hamster/) 九宫格布局。
-#
-# 可选，支持英文：
-# 1. 解开 `engine/translators` 下的注释
-# 2. 将 `others/Hamster/melt_eng.custom.yaml` 里的文件拷贝至配置目录，该补丁转写了英文的拼写规则到九宫格；
-
 t9:
   # 是否显示 rime 中原始的预编辑文本，默认为 true
   # true: 对 preedit 不做处理，显示 rime 返回的原始 preedit 值。
@@ -28,23 +22,12 @@ schema:
     九键双拼输入方案
     通过第三键实现字母定位
   dependencies:
-    # - melt_eng # 英文输入，作为次翻译器挂载到拼音方案
     - imr_T93_radical_pinyin
     - imr_T93_stroke
     - imr_T93_auxcode
     - imr_auxcode_comment
     - imr_T93_source
 
-hub:
-  date:
-    date: "date"
-    time: "time"
-    week: "week"
-    datetime: "datetime"
-    timestamp: "timestamp"
-    datezh: "datezh"
-    dateen: "dateen"
-  calculator: "="
 
 engine:
   processors:
@@ -70,7 +53,6 @@ engine:
     - punct_translator
     - lua_translator@*imr.imr_script_translator@translator
     - lua_translator@*imr.select_char*Translator
-    - lua_translator@*imr.hub
     - lua_translator@*imr.gc
     # - table_translator@melt_eng     # 英文输入
     - table_translator@radical_lookup    # 部件拆字反查
@@ -86,15 +68,11 @@ engine:
     - lua_filter@*imr.T93_filter
     - uniquifier # 去重
 
-calculator:
-  prefix: =
-  show_prefix: true
 
 # 处理符合特定规则的输入码，如网址、反查
 recognizer:
   import_preset: default                # 从 default.yaml 继承通用的
   patterns:                             # 再增加方案专有的：
-    calculator: "^=.+"                 # 响应 lua_translator@*calc_translator，计算器。前缀设定项 calculator/prefix
     radical_lookup: "^03[0-9]+$"        # 响应部件拆字的反查，触发前缀与 radical_lookup/prefix 匹配
     stroke_lookup: '^05[0-9]+$'
 
