@@ -24,15 +24,6 @@ local Processor = {
             return 2
         end
 
-        -- 筛选模式下 Backspace：code 清空后退出
-        if state.mode == "code" and key:repr() == "BackSpace" then
-            local input = ctx.input or ""
-            if not string.find(input, env.trigger, 1, true) then
-                state = { mode = "", text = "" }
-            end
-            return 2
-        end
-
         -- 已进入模式但按键不是 Backspace → 放行给 speller/T93
         if state.mode == "code" then
             return 2
@@ -67,6 +58,12 @@ local Translator = {
 
         local ctx = env.engine.context
         local full_input = ctx.input or ""
+
+        if not string.find(full_input, env.trigger, 1, true) then
+            state = { mode = "", text = "" }
+            return
+        end
+
         local pos = string.find(full_input, env.trigger, 1, true)
         local code = pos and string.sub(full_input, pos + 1) or ""
 
