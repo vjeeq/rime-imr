@@ -27,6 +27,7 @@ schema:
     - imr_DPY_auxcode
     - imr_auxcode_comment
     - imr_DPY_source
+    - imr_en                     # 英文输入
 
 
 # hub 模式触发配置
@@ -95,55 +96,18 @@ engine:
     - lua_translator@*imr.select_char*Translator
     - lua_translator@*imr.gc
     - table_translator@custom_phrase     # 自定义短语 custom_phrase_double.txt
-    - table_translator@cn_en             # 中英混合词汇
+    - table_translator@imr_en           # 英文输入
     - table_translator@radical_lookup    # 部件拆字反查
   filters:
     - lua_filter@*imr.tatata                           # 首字优先级排序
     - reverse_lookup_filter@radical_reverse_lookup  # 部件拆字滤镜
     - lua_filter@*autocap_filter                    # 英文自动大写
     - lua_filter@*pin_cand_filter                   # 置顶候选项（顺序要求：置顶候选项 > Emoji > 简繁切换）
-    - lua_filter@*reduce_english_filter             # 降低部分英语单词在候选项的位置
     - simplifier@emoji                              # Emoji
     - simplifier@traditionalize                     # 简繁切换
     - lua_filter@*imr.aux_code
     - lua_filter@*imr.select_char*Filter
     - uniquifier                                    # 去重
-
-
-# Lua 配置: 降低部分英语单词在候选项的位置。
-# 详细介绍 https://dvel.me/posts/make-rime-en-better/#短单词置顶的问题
-# 正常情况： 输入 rug 得到 「1.rug 2.如果 …… 」
-# 降低之后： 输入 rug 得到 「1.如果 2.rug …… 」
-# 几种模式：
-# all     降低脚本内置的单词（所有 3~4 位长度、前 2~3 位是完整拼音、最后一位是声母），words 作为自定义的额外补充
-# custom  完全自定义，只降低 words 里的
-# none    不降低任何单词，相当于没有启用这个 Lua
-# （匹配的是编码，不是单词）
-reduce_english_filter:
-  mode: custom  # all | custom | none
-  idx: 2        # 降低到第 idx 个位置
-  # 自定义的单词列表，示例列表没有降低部分常用单词，如 and cat mail Mac but bad shit ……
-  words: [
-    aid, ann,
-    bail, bait, bam, band, bans, bat, bay, bend, bent, benz, bib, bid, bien, biz, boc, bop, bos, bud, buf, bach, bench, bush,
-    cab, cad, cain, cam, cans, cap, cef, chad, chan, chap, chef, cher, chew, chic, chin, chip, chit, coup, cum, cunt, cur, couch,
-    dab, dag, dal, dam, dent, dew, dial, diet, dim, din, dip, dis, dit, doug, dub, dug, dunn,
-    fab, fax, fob, fog, foul, fur,
-    gag, gail, gain, gal, gam, gaol, ged, gel, ger, guam, gus, gut,
-    hail, ham, hank, hans, hat, hay, heil, heir, hem, hep, hud, hum, hung, hunk, hut, hush,
-    jim, jug,
-    kat,
-    lab, lad, lag, laid, lam, laos, lap, lat, lax, lay, led, leg, lex, liam, lib, lid, lied, lien, lies, linn, lip, lit, liz, lob, lug, lund, lung, lux, lash, loch, lush,
-    mag, maid, mann, mar, mat, med, mel, mend, mens, ment, mil, mins, mint, mob, moc, mop, mos, mot, mud, mug, mum, mesh,
-    nap, nat, nay, neil, nib, nip, noun, nous, nun, nut, nail, nash,
-    pac, paid, pail, pain, pair, pak, pal, pam, pans, pant, pap, par, pat, paw, pax, pens, pic, pier, pies, pins, pint, pit, pix, pod, pop, pos, pot, pour, pow, pub, pinch, pouch,
-    rand, rant, rent, rep, res, ret, rex, rib, rid, rig, rim, rub, rug, rum, runc, runs, ranch,
-    sac, sail, sal, sam, sans, sap, saw, sax, sew, sham, shaw, shin, sig, sin, sip, sis, suit, sung, suns, sup, sur, sus,
-    tad, tail, taj, tar, tax, tec, ted, tel, ter, tex, tic, tied, tier, ties, tim, tin, tit, tour, tout, tum,
-    wag, wand, womens, wap, wax, weir, won,
-    yan, yen,
-    zach
-  ]
 
 
 # Lua 配置: 置顶候选项
@@ -165,25 +129,13 @@ translator:
     - xform/0/⁴/
 
 # 次翻译器，英文
-melt_eng:
-  dictionary: melt_eng     # 挂载词库 melt_eng.dict.yaml
-  enable_sentence: false   # 禁止造句
-  enable_user_dict: false  # 禁用用户词典
-  initial_quality: 1.1     # 初始权重
-  comment_format:          # 自定义提示码
-    - xform/.*//           # 清空提示码
-
-
-# 中英混合词汇
-cn_en:
-  dictionary: ""
-  user_dict: en_dicts/cn_en_double_pinyin
-  db_class: stabledb
-  enable_completion: true
-  enable_sentence: false
-  initial_quality: 0.5
-  comment_format:
-    - xform/^.+$//
+imr_en:
+  dictionary: imr_en     # 挂载词库 imr_en.dict.yaml
+  enable_sentence: false  # 禁止造句
+  enable_user_dict: false # 禁用用户词典
+  initial_quality: 0.8    # 初始权重（中文 1.2）
+  comment_format:         # 自定义提示码
+    - xform/.*//          # 清空提示码
 
 
 # 自定义短语

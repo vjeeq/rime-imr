@@ -30,6 +30,10 @@ const files = {
     'downloads/wanxiang/aux_code.txt': 'https://cnb.cool/amzxyz/rime-wanxiang/-/git/raw/wanxiang/custom/aux_code.txt',
     //// 万象自然码辅助码注释
     'downloads/wanxiang/aux_chaifen.txt': require(path.join(PROJECT_ROOT, 'scripts', 'aux_code')).AUX_CF_URL,
+    //// 雾凇英文
+    'downloads/ice/en.dict.yaml': 'https://cdn.jsdelivr.net/gh/iDvel/rime-ice@main/en_dicts/en.dict.yaml',
+    'downloads/ice/en_ext.dict.yaml': 'https://cdn.jsdelivr.net/gh/iDvel/rime-ice@main/en_dicts/en_ext.dict.yaml',
+    'downloads/ice/cn_en_double_pinyin.txt': 'https://cdn.jsdelivr.net/gh/iDvel/rime-ice@main/en_dicts/cn_en_double_pinyin.txt',
     //// 万象模型
     'wanxiang-lts-zh-hans.gram': 'https://cnb.cool/amzxyz/rime-wanxiang/-/releases/download/model/wanxiang-lts-zh-hans.gram',
     //// 万象方案(同步模型参数用)

@@ -111,6 +111,36 @@ const TRANSFORMER = {
                 return result;
             }, {})
     },
+    ice_english_merge(source_map) {
+        const { en_dict, en_ext_dict, cn_en_txt } = source_map;
+
+        const parseDict = (txt) => txt.split('\n')
+            .map(l => l.trim())
+            .filter(l => l && l[0] !== '#' && l !== '---' && l !== '...')
+            .map(l => l.split('\t'))
+            .filter(p => p.length >= 1 && p[0])
+            .filter(p => /^[a-zA-Z0-9]+$/.test(p[0]))
+            .filter(p => p[0].length >= 4 || p[0] !== p[0].toLowerCase())
+            .map(p => `${p[0]}\t${p[1] || p[0]}`);
+
+        const enWords = [...new Set(parseDict(en_dict))];
+        const enExtWords = [...new Set(parseDict(en_ext_dict))];
+
+        const cnEnLines = cn_en_txt.split('\n')
+            .map(l => l.trim())
+            .filter(l => l && l[0] !== '#')
+            .map(l => l.split('\t'))
+            .filter(p => p.length >= 2 && p[1])
+            .map(([cn, code]) => `${cn}\t${code.toLowerCase()}`);
+
+        const merged = [
+            ...enWords,
+            ...enExtWords,
+            ...cnEnLines,
+        ].map(s => s + '\n').join('');
+
+        return { english: merged };
+    },
     grammar(source_map) {
         const source = source_map.schema
         const source_json = YAML_JS.load(source)
@@ -274,6 +304,21 @@ const files = [
             diming: { file: 'dicts/wanxiang/diming.pro.dict.yaml', name: 'diming' },
         },
         transform: TRANSFORMER.wanxiang_pro,
+    },
+    {
+        // 雾凇混输
+        source: {
+            en_dict: 'downloads/ice/en.dict.yaml',
+            en_ext_dict: 'downloads/ice/en_ext.dict.yaml',
+            cn_en_txt: 'downloads/ice/cn_en_double_pinyin.txt',
+        },
+        target: {
+            english: {
+                file: 'dicts/ice/english.dict.yaml',
+                name: 'english',
+            },
+        },
+        transform: TRANSFORMER.ice_english_merge,
     },
     {   // 万象方案 => 万象模型参数
         source: {

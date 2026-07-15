@@ -1,0 +1,13 @@
+# Rime dictionary
+# encoding: utf-8
+#
+# IMR 英文词库（含中英混输）
+# 由 transform.js 合并 en + en_ext + cn_en 生成
+#
+
+---
+name: imr_en
+version: zzz
+import_tables:
+  - dicts/ice/english
+...
