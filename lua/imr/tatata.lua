@@ -1,5 +1,7 @@
 -- 多字词首字优先级排序。不影响词频记录。
 -- 支持多组 × 4 种匹配模式，支持多字优先项。
+-- 规则按数组顺序执行（串联）：每组只排序匹配自己的候选，
+-- 非匹配项原位不动，组间不交叉。
 --
 -- 配置：
 --   tatata:
@@ -15,16 +17,10 @@
 -- 默认：{ words = {"他", "她", "它"}, type = "contains" }
 
 -- ── UTF-8 ──
-local function utf8_chars(s)
-    local t = {}
-    for ch in s:gmatch("[%z\1-\127\194-\244][\128-\191]*") do
-        table.insert(t, ch)
-    end
-    return t
-end
-
 local function word_len(s)
-    return #utf8_chars(s)
+    local n = 0
+    for _ in s:gmatch("[%z\1-\127\194-\244][\128-\191]*") do n = n + 1 end
+    return n
 end
 
 -- ── Match (byte-level, supports multi-char words) ──
@@ -42,15 +38,12 @@ local function match_word(typ, text, word)
 end
 
 -- ── Strip ──
--- contains: 去掉文本中所有该组的 word
--- starts_with / ends_with / exact: 去匹配位置
-local function strip_word(groups, group_idx, text)
-    local g = groups[group_idx]
-    local typ = g.typ
-
+-- 从 text 中去掉该组所有匹配过的 word，返回 rest
+local function strip_group(group, text)
+    local typ = group.typ
     if typ == "contains" then
         local r = text
-        for _, w in ipairs(g.words) do
+        for _, w in ipairs(group.words) do
             local pos = r:find(w, 1, true)
             while pos do
                 r = r:sub(1, pos - 1) .. r:sub(pos + #w)
@@ -59,73 +52,58 @@ local function strip_word(groups, group_idx, text)
         end
         return r
     elseif typ == "starts_with" then
-        for _, w in ipairs(g.words) do
+        for _, w in ipairs(group.words) do
             if text:sub(1, #w) == w then return text:sub(#w + 1) end
         end
-        local c = utf8_chars(text)
-        if #c >= 1 then table.remove(c, 1) end
-        return table.concat(c)
     elseif typ == "ends_with" then
-        for _, w in ipairs(g.words) do
+        for _, w in ipairs(group.words) do
             if text:sub(-#w) == w then return text:sub(1, -(#w + 1)) end
         end
-        local c = utf8_chars(text)
-        if #c >= 1 then table.remove(c) end
-        return table.concat(c)
     elseif typ == "exact" then
         return ""
     end
     return text
 end
 
--- ── Rank ──
--- 返回 group_idx, word_idx（数字越小越优先）
-local function best_rank(groups, text)
-    for group_idx = 1, #groups do
-        local g = groups[group_idx]
-        for word_idx = 1, #g.words do
-            if match_word(g.typ, text, g.words[word_idx]) then
-                return group_idx, word_idx
+-- ── 串联：一组排序 ──
+-- 后面规则先做。组内：从差优先到好优先，锚点往后扫，更高优同 rest 拉到头前。
+local function sort_one_group(group, items)
+    for wi = #group.words, 2, -1 do
+        local anchor = nil
+        for i = 1, #items do
+            if match_word(group.typ, items[i], group.words[wi]) then
+                anchor = i
+                break
             end
         end
-    end
-    return nil
-end
+        if not anchor then goto continue end
+        local anchor_rest = strip_group(group, items[anchor])
 
--- ── Sort by groups ──
-local function sort_by_groups(groups, items)
-    local n = #items
-    if n == 0 then return {} end
-
-    local rank_of = {}
-    for i = 1, n do
-        local gid, wid = best_rank(groups, items[i])
-        if gid then
-            local rs = strip_word(groups, gid, items[i])
-            local key = gid .. "|" .. rs
-            if not rank_of[key] then rank_of[key] = {} end
-            rank_of[key][i] = wid
+        local pulled, tail = {}, {}
+        for i = anchor + 1, #items do
+            local better = false
+            for bi = 1, wi - 1 do
+                if match_word(group.typ, items[i], group.words[bi]) then
+                    better = true; break
+                end
+            end
+            if better and strip_group(group, items[i]) == anchor_rest then
+                table.insert(pulled, items[i])
+            else
+                table.insert(tail, items[i])
+            end
         end
+
+        local new_items = {}
+        for i = 1, anchor - 1 do table.insert(new_items, items[i]) end
+        for _, v in ipairs(pulled) do table.insert(new_items, v) end
+        table.insert(new_items, items[anchor])
+        for _, v in ipairs(tail) do table.insert(new_items, v) end
+        items = new_items
+
+        ::continue::
     end
-
-    local result = {}
-    for i = 1, n do result[i] = items[i] end
-
-    for _, pos_map in pairs(rank_of) do
-        local entries = {}
-        for pos, rank in pairs(pos_map) do
-            table.insert(entries, { pos = pos, text = result[pos], rank = rank })
-        end
-        table.sort(entries, function(a, b) return a.rank < b.rank end)
-        local sorted_pos = {}
-        for _, e in ipairs(entries) do table.insert(sorted_pos, e.pos) end
-        table.sort(sorted_pos)
-        for i, e in ipairs(entries) do
-            result[sorted_pos[i]] = e.text
-        end
-    end
-
-    return result
+    return items
 end
 
 -- ── Rime filter ──
@@ -133,7 +111,6 @@ local M = {}
 
 function M.init(env)
     local config = env.engine.schema.config
-    -- 先查 tatata 键是否存在，区分「没写」和「写了空列表」
     local top = config:get_list("tatata")
     if top == nil then
         M.groups = { { words = { "他", "她", "它" }, typ = "contains" } }
@@ -164,6 +141,16 @@ function M.init(env)
     end
 end
 
+-- 候选是否命中任一 group
+local function hit_any(groups, text)
+    for _, g in ipairs(groups) do
+        for _, w in ipairs(g.words) do
+            if match_word(g.typ, text, w) then return true end
+        end
+    end
+    return false
+end
+
 function M.func(input, env)
     local groups = M.groups
     local it = input:iter()
@@ -171,6 +158,7 @@ function M.func(input, env)
 
     local function flush()
         if n == 0 then return end
+        -- 提取 texts，逐组串行排序
         local texts = {}
         local by_text = {}
         for i = 1, n do
@@ -178,34 +166,11 @@ function M.func(input, env)
             texts[i] = t
             by_text[t] = buf[i]
         end
-
-        local head_gid, head_wid = best_rank(groups, texts[1])
-        if head_gid then
-            local trigger_rest = strip_word(groups, head_gid, texts[1])
-            local higher, mark = {}, {}
-            for i = 1, n do
-                local gid, wid = best_rank(groups, texts[i])
-                if gid and wid < head_wid then
-                    local rs = strip_word(groups, gid, texts[i])
-                    if gid == head_gid and rs == trigger_rest then
-                        table.insert(higher, texts[i])
-                        mark[i] = true
-                    end
-                end
-            end
-
-            local compact = {}
-            for i = 1, n do
-                if not mark[i] then table.insert(compact, texts[i]) end
-            end
-
-            compact = sort_by_groups(groups, compact)
-
-            for _, t in ipairs(higher) do yield(by_text[t]) end
-            for _, t in ipairs(compact) do yield(by_text[t]) end
-        else
-            local sorted = sort_by_groups(groups, texts)
-            for _, t in ipairs(sorted) do yield(by_text[t]) end
+        for gi = #groups, 1, -1 do
+            texts = sort_one_group(groups[gi], texts)
+        end
+        for _, t in ipairs(texts) do
+            yield(by_text[t])
         end
         n = 0
     end
@@ -214,10 +179,10 @@ function M.func(input, env)
         local cand = it(input)
         if not cand then break end
 
-        local gid = best_rank(groups, cand.text)
+        local hit = hit_any(groups, cand.text)
         local l = word_len(cand.text)
 
-        if gid and l >= 2 then
+        if hit and l >= 2 then
             n = n + 1; buf[n] = cand
         elseif n == 0 then
             yield(cand)
