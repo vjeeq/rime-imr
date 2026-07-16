@@ -243,3 +243,12 @@ db:
 
 __include: imr_grammar:/
 
+tatata:
+  - words: ['他','她','它']
+    type: contains      # 左右模糊
+  - words: ['那', '哪']
+    type: starts_with   # 右模糊 ( 那个 > 哪个, 避免 ...那X 一定 > ...哪X (可能语言模型会给出更准全的选项?) )
+  - words: ['的', '地', '得']
+    type: ends_with     # 左模糊 ( XX的 > XX地 > XX得, 避免 XX的YY 一定 > XX地YY (可能语言模型会给出更准全的选项?) )
+  - words: ['哥伦比娅', '哥伦比亚']
+    type: exact         # 精准 ( 避免 '哥伦比娅大学' > '哥伦比亚大学' )

@@ -7,12 +7,12 @@
 --   tatata:
 --     - words: ['他','她','它']
 --       type: contains      # 左右模糊
---     - words: ['那个','哪个']
---       type: starts_with   # 右模糊
---     - words: ['你','妳']
---       type: ends_with     # 左模糊
---     - words: ['他']
---       type: exact         # 精准
+--     - words: ['那', '哪']
+--       type: starts_with   # 右模糊 ( 那个 > 哪个, 避免 ...那X 一定 > ...哪X (可能语言模型会给出更准全的选项?) )
+--     - words: ['的', '地', '得']
+--       type: ends_with     # 左模糊 ( XX的 > XX地 > XX得, 避免 XX的YY 一定 > XX地YY (可能语言模型会给出更准全的选项?) )
+--     - words: ['哥伦比娅', '哥伦比亚']
+--       type: exact         # 精准 ( 避免 '哥伦比娅大学' > '哥伦比亚大学' )
 --
 -- 默认：{ words = {"他", "她", "它"}, type = "contains" }
 
@@ -66,42 +66,37 @@ local function strip_group(group, text)
 end
 
 -- ── 串联：一组排序 ──
--- 后面规则先做。组内：从差优先到好优先，锚点往后扫，更高优同 rest 拉到头前。
+-- 后面规则先做。组内：遍历每个 word 的出现位置作锚点，
+-- 从后往前比 better words，逐级拉高优同 rest 项到锚前。
 local function sort_one_group(group, items)
     for wi = #group.words, 2, -1 do
-        local anchor = nil
-        for i = 1, #items do
-            if match_word(group.typ, items[i], group.words[wi]) then
-                anchor = i
-                break
-            end
-        end
-        if not anchor then goto continue end
-        local anchor_rest = strip_group(group, items[anchor])
-
-        local pulled, tail = {}, {}
-        for i = anchor + 1, #items do
-            local better = false
-            for bi = 1, wi - 1 do
-                if match_word(group.typ, items[i], group.words[bi]) then
-                    better = true; break
+        local anchor = 1
+        while anchor <= #items do
+            if match_word(group.typ, items[anchor], group.words[wi]) then
+                local anchor_rest = strip_group(group, items[anchor])
+                for bi = 1, wi - 1 do
+                    local found = nil
+                    for i = anchor + 1, #items do
+                        if match_word(group.typ, items[i], group.words[bi])
+                           and strip_group(group, items[i]) == anchor_rest then
+                            found = i
+                            break
+                        end
+                    end
+                    if found then
+                        local new_items = {}
+                        for i = 1, anchor - 1 do table.insert(new_items, items[i]) end
+                        table.insert(new_items, items[found])
+                        for i = anchor, #items do
+                            if i ~= found then table.insert(new_items, items[i]) end
+                        end
+                        items = new_items
+                        anchor = anchor + 1
+                    end
                 end
             end
-            if better and strip_group(group, items[i]) == anchor_rest then
-                table.insert(pulled, items[i])
-            else
-                table.insert(tail, items[i])
-            end
+            anchor = anchor + 1
         end
-
-        local new_items = {}
-        for i = 1, anchor - 1 do table.insert(new_items, items[i]) end
-        for _, v in ipairs(pulled) do table.insert(new_items, v) end
-        table.insert(new_items, items[anchor])
-        for _, v in ipairs(tail) do table.insert(new_items, v) end
-        items = new_items
-
-        ::continue::
     end
     return items
 end
