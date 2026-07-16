@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const PROJECT_ROOT = path.join(__dirname, '..');
-const YAML_JS = require(path.join(PROJECT_ROOT, 'scripts', 'utils', 'js-yaml.min'));
+const YAML_JS = require(path.join(PROJECT_ROOT, 'scripts', 'utils', 'js-yaml'));
 // [1]万象 [2]墨奇 [3]小鹤 [4]自然码 [5]虎码 [6]五笔 [7]汉心 [8]首右 [9]首右+
 const AUX_INDEX = require(path.join(PROJECT_ROOT, 'scripts', 'aux_code')).AUX_INDEX;
 const T93_EN_NUM = {
