@@ -354,6 +354,8 @@ function work() {
         const target_map = transform(source_map)
         Object.keys(target_map).forEach(target_key => {
             const target_file = path.join(__dirname, '..', target[target_key].file);
+            const dir = path.dirname(target_file);
+            if (!fs.existsSync(dir)) { fs.mkdirSync(dir, { recursive: true }); }
             fs.writeFileSync(target_file, ((target[target_key].is_dict ?? true) ? [
                 `# Rime dictionary`,
                 `# encoding: utf-8`,
