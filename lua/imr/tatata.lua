@@ -1,13 +1,20 @@
 -- 多字词首字优先级排序。不影响词频记录。
--- 保持 "x他x" "x她x" "x它x" 按 "他" "她" "它" 的顺序排列。
+-- 支持多组 × 4 种匹配模式，支持多字优先项。
 --
--- 用法：在 schema 的 filters 中添加：
---       lua_filter@*imr.tatata
+-- 配置：
+--   tatata:
+--     - words: ['他','她','它']
+--       type: contains      # 左右模糊
+--     - words: ['那个','哪个']
+--       type: starts_with   # 右模糊
+--     - words: ['你','妳']
+--       type: ends_with     # 左模糊
+--     - words: ['他']
+--       type: exact         # 精准
 --
--- 配置：tatata: ["他她它"]  或默认 "他她它"
+-- 默认：{ words = {"他", "她", "它"}, type = "contains" }
 
-local M = {}
-
+-- ── UTF-8 ──
 local function utf8_chars(s)
     local t = {}
     for ch in s:gmatch("[%z\1-\127\194-\244][\128-\191]*") do
@@ -16,116 +23,189 @@ local function utf8_chars(s)
     return t
 end
 
-local function char_rank(pri, ch)
-    for i, c in ipairs(pri) do if ch == c then return i end end
-    return 0
-end
-
-local function best_rank(pri, s)
-    local best = 0
-    for ch in s:gmatch("[%z\1-\127\194-\244][\128-\191]*") do
-        local r = char_rank(pri, ch)
-        if r > 0 and (best == 0 or r < best) then best = r end
-    end
-    return best
-end
-
-local function strip_priority(s, target, pri)
-    local out = {}
-    local found = false
-    for ch in s:gmatch("[%z\1-\127\194-\244][\128-\191]*") do
-        if not found and char_rank(pri, ch) == target then found = true
-        else table.insert(out, ch) end
-    end
-    return table.concat(out)
-end
-
 local function word_len(s)
     return #utf8_chars(s)
 end
 
-function M.init(env)
-    M.engine = env.engine
-    local list = env.engine.schema.config:get_list("tatata")
-    local item = list and list.size > 0 and list:get_at(0)
-    local val  = item and item:get_value()
-    local str  = (val and val:get_string()) or "他她它"
-    M.pri = {}
-    for c in str:gmatch("[%z\1-\127\194-\244][\128-\191]*") do
-        table.insert(M.pri, c)
+-- ── Match (byte-level, supports multi-char words) ──
+local function match_word(typ, text, word)
+    if typ == "contains" then
+        return text:find(word, 1, true) ~= nil
+    elseif typ == "starts_with" then
+        return text:sub(1, #word) == word
+    elseif typ == "ends_with" then
+        return text:sub(-#word) == word
+    elseif typ == "exact" then
+        return text == word
     end
+    return false
 end
 
--- 非优先项打头：全体优先项按 rest 分组排序，各组在首次出现处全部输出
-local function flush_non_head(buf, n, pri)
-    local groups, owner = {}, {}
-    for i = 1, n do
-        local r = best_rank(pri, buf[i].text)
-        if r > 0 and word_len(buf[i].text) >= 2 then
-            local rs = strip_priority(buf[i].text, r, pri)
-            owner[i] = rs
-            if not groups[rs] then groups[rs] = {} end
-            table.insert(groups[rs], { c = buf[i], r = r })
+-- ── Strip ──
+-- contains: 去掉文本中所有该组的 word
+-- starts_with / ends_with / exact: 去匹配位置
+local function strip_word(groups, group_idx, text)
+    local g = groups[group_idx]
+    local typ = g.typ
+
+    if typ == "contains" then
+        local r = text
+        for _, w in ipairs(g.words) do
+            local pos = r:find(w, 1, true)
+            while pos do
+                r = r:sub(1, pos - 1) .. r:sub(pos + #w)
+                pos = r:find(w, 1, true)
+            end
         end
-    end
-    for _, g in pairs(groups) do
-        table.sort(g, function(a, b) return a.r < b.r end)
-    end
-    local done = {}
-    for i = 1, n do
-        local rs = owner[i]
-        if rs then
-            if not done[rs] then done[rs] = true; for _, x in ipairs(groups[rs]) do yield(x.c) end end
-        else
-            yield(buf[i])
+        return r
+    elseif typ == "starts_with" then
+        for _, w in ipairs(g.words) do
+            if text:sub(1, #w) == w then return text:sub(#w + 1) end
         end
+        local c = utf8_chars(text)
+        if #c >= 1 then table.remove(c, 1) end
+        return table.concat(c)
+    elseif typ == "ends_with" then
+        for _, w in ipairs(g.words) do
+            if text:sub(-#w) == w then return text:sub(1, -(#w + 1)) end
+        end
+        local c = utf8_chars(text)
+        if #c >= 1 then table.remove(c) end
+        return table.concat(c)
+    elseif typ == "exact" then
+        return ""
     end
+    return text
 end
 
--- 优先项打头：提取 rank 更高的同 rest 项提到最前面，同 rest 内部按 rank 冒泡
-local function flush_head(buf, n, pri)
-    local trigger_rest = strip_priority(buf[1].text, best_rank(pri, buf[1].text), pri)
-    local higher = {}
-    for i = 1, n do
-        local r = best_rank(pri, buf[i].text)
-        if r > 0 and r < best_rank(pri, buf[1].text) and word_len(buf[i].text) >= 2
-            and strip_priority(buf[i].text, r, pri) == trigger_rest then
-            table.insert(higher, { c = buf[i], r = r })
-            buf[i] = nil
-        end
-    end
-    table.sort(higher, function(a, b) return a.r < b.r end)
-    local compact = {}
-    for i = 1, n do if buf[i] then table.insert(compact, buf[i]) end end
-    buf, n = compact, #compact
-    for i = 1, n do
-        local ri = best_rank(pri, buf[i].text)
-        if ri > 0 and word_len(buf[i].text) >= 2
-            and strip_priority(buf[i].text, ri, pri) == trigger_rest then
-            for j = i + 1, n do
-                local rj = best_rank(pri, buf[j].text)
-                if rj > 0 and word_len(buf[j].text) >= 2
-                    and strip_priority(buf[j].text, rj, pri) == trigger_rest and ri > rj then
-                    buf[i], buf[j] = buf[j], buf[i]; break
-                end
+-- ── Rank ──
+-- 返回 group_idx, word_idx（数字越小越优先）
+local function best_rank(groups, text)
+    for group_idx = 1, #groups do
+        local g = groups[group_idx]
+        for word_idx = 1, #g.words do
+            if match_word(g.typ, text, g.words[word_idx]) then
+                return group_idx, word_idx
             end
         end
     end
-    for _, x in ipairs(higher) do yield(x.c) end
-    for i = 1, n do yield(buf[i]) end
+    return nil
 end
 
-function M.func(input)
-    local pri = M.pri
+-- ── Sort by groups ──
+local function sort_by_groups(groups, items)
+    local n = #items
+    if n == 0 then return {} end
+
+    local rank_of = {}
+    for i = 1, n do
+        local gid, wid = best_rank(groups, items[i])
+        if gid then
+            local rs = strip_word(groups, gid, items[i])
+            local key = gid .. "|" .. rs
+            if not rank_of[key] then rank_of[key] = {} end
+            rank_of[key][i] = wid
+        end
+    end
+
+    local result = {}
+    for i = 1, n do result[i] = items[i] end
+
+    for _, pos_map in pairs(rank_of) do
+        local entries = {}
+        for pos, rank in pairs(pos_map) do
+            table.insert(entries, { pos = pos, text = result[pos], rank = rank })
+        end
+        table.sort(entries, function(a, b) return a.rank < b.rank end)
+        local sorted_pos = {}
+        for _, e in ipairs(entries) do table.insert(sorted_pos, e.pos) end
+        table.sort(sorted_pos)
+        for i, e in ipairs(entries) do
+            result[sorted_pos[i]] = e.text
+        end
+    end
+
+    return result
+end
+
+-- ── Rime filter ──
+local M = {}
+
+function M.init(env)
+    local config = env.engine.schema.config
+    -- 先查 tatata 键是否存在，区分「没写」和「写了空列表」
+    local top = config:get_list("tatata")
+    if top == nil then
+        M.groups = { { words = { "他", "她", "它" }, typ = "contains" } }
+        return
+    end
+    M.groups = {}
+    local i = 0
+    while true do
+        local base = "tatata/@" .. i
+        local wlist = config:get_list(base .. "/words")
+        local words = {}
+        if wlist and wlist.size > 0 then
+            for j = 0, wlist.size - 1 do
+                local v = wlist:get_value_at(j)
+                local w = v and v.value
+                if w and #w > 0 then table.insert(words, w) end
+            end
+        else
+            local str = config:get_string(base .. "/words") or ""
+            for ch in str:gmatch("[%z\1-\127\194-\244][\128-\191]*") do
+                table.insert(words, ch)
+            end
+        end
+        if #words == 0 then break end
+        local typ = config:get_string(base .. "/type") or "contains"
+        table.insert(M.groups, { words = words, typ = typ })
+        i = i + 1
+    end
+end
+
+function M.func(input, env)
+    local groups = M.groups
     local it = input:iter()
     local buf, n = {}, 0
 
     local function flush()
         if n == 0 then return end
-        if best_rank(pri, buf[1].text) == 0 then
-            flush_non_head(buf, n, pri)
+        local texts = {}
+        local by_text = {}
+        for i = 1, n do
+            local t = buf[i].text
+            texts[i] = t
+            by_text[t] = buf[i]
+        end
+
+        local head_gid, head_wid = best_rank(groups, texts[1])
+        if head_gid then
+            local trigger_rest = strip_word(groups, head_gid, texts[1])
+            local higher, mark = {}, {}
+            for i = 1, n do
+                local gid, wid = best_rank(groups, texts[i])
+                if gid and wid < head_wid then
+                    local rs = strip_word(groups, gid, texts[i])
+                    if gid == head_gid and rs == trigger_rest then
+                        table.insert(higher, texts[i])
+                        mark[i] = true
+                    end
+                end
+            end
+
+            local compact = {}
+            for i = 1, n do
+                if not mark[i] then table.insert(compact, texts[i]) end
+            end
+
+            compact = sort_by_groups(groups, compact)
+
+            for _, t in ipairs(higher) do yield(by_text[t]) end
+            for _, t in ipairs(compact) do yield(by_text[t]) end
         else
-            flush_head(buf, n, pri)
+            local sorted = sort_by_groups(groups, texts)
+            for _, t in ipairs(sorted) do yield(by_text[t]) end
         end
         n = 0
     end
@@ -134,13 +214,13 @@ function M.func(input)
         local cand = it(input)
         if not cand then break end
 
-        local r = best_rank(pri, cand.text)
+        local gid = best_rank(groups, cand.text)
         local l = word_len(cand.text)
 
-        if l < 2 then
-            if n == 0 then yield(cand) else n = n + 1; buf[n] = cand end
-        elseif r == 0 then
-            if n == 0 then yield(cand) else n = n + 1; buf[n] = cand end
+        if gid and l >= 2 then
+            n = n + 1; buf[n] = cand
+        elseif n == 0 then
+            yield(cand)
         else
             n = n + 1; buf[n] = cand
         end
