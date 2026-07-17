@@ -52,20 +52,19 @@ engine:
   translators:
     - punct_translator
     - lua_translator@*imr.imr_script_translator@translator
-    - lua_translator@*imr.select_char*Translator
-    - lua_translator@*imr.gc
-    # - table_translator@melt_eng     # 英文输入
     - table_translator@radical_lookup    # 部件拆字反查
     - table_translator@stroke_lookup     # 笔画拆字反查
+    - lua_translator@*imr.select_char*Translator
+    - lua_translator@*imr.gc
   filters:
-    - lua_filter@*imr.tatata                           # 首字优先级排序
-    - reverse_lookup_filter@reverse_lookup  # 部件拆字滤镜
+    - lua_filter@*imr.tatata
     - lua_filter@*pin_cand_filter
     - simplifier@emoji # Emoji
     - simplifier@traditionalize # 简繁切换
+    - reverse_lookup_filter@reverse_lookup  # 部件拆字滤镜
     - lua_filter@*imr.aux_code
-    - lua_filter@*imr.select_char*Filter
     - lua_filter@*imr.T93_filter
+    - lua_filter@*imr.select_char*Filter
     - uniquifier # 去重
 
 

@@ -92,18 +92,18 @@ engine:
   translators:
     - punct_translator
     - lua_translator@*imr.imr_script_translator@translator
-    - lua_translator@*imr.hub
-    - lua_translator@*imr.select_char*Translator
     - table_translator@imr_en            # 英文输入
     - table_translator@radical_lookup    # 部件拆字反查
+    - lua_translator@*imr.hub
+    - lua_translator@*imr.select_char*Translator
     - lua_translator@*imr.gc
   filters:
-    - lua_filter@*imr.tatata                           # 首字优先级排序
-    - reverse_lookup_filter@radical_reverse_lookup  # 部件拆字滤镜
+    - lua_filter@*imr.tatata                        
     - lua_filter@*autocap_filter                    # 英文自动大写
     - lua_filter@*pin_cand_filter                   # 置顶候选项（顺序要求：置顶候选项 > Emoji > 简繁切换）
     - simplifier@emoji                              # Emoji
     - simplifier@traditionalize                     # 简繁切换
+    - reverse_lookup_filter@radical_reverse_lookup  # 部件拆字滤镜
     - lua_filter@*imr.aux_code
     - lua_filter@*imr.select_char*Filter
     - uniquifier                                    # 去重
