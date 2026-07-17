@@ -196,9 +196,7 @@ recognizer:
 
 # 快捷键
 key_binder:
-  # Lua 配置: 以词定字（上屏当前词句的第一个或最后一个字），和中括号翻页有冲突
-  select_first_character: "bracketleft"  # 左中括号 [
-  select_last_character: "bracketright"  # 右中括号 ]
+  # 以词定字（[ ]）和翻页冲突已注释，选字通过 select_char.lua（: 模式）完成
 
   bindings:
     # Tab / Shift+Tab 切换光标至下/上一个拼音
