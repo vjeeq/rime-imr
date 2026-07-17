@@ -5,8 +5,6 @@
 --   - 条件性高低频调整
 -- 用法：lua_translator@*imr.imr_script_translator@translator
 
-if not utf8 then utf8 = require("utf8") end
-
 local M = {}
 
 function M.init(env)
@@ -14,6 +12,7 @@ function M.init(env)
     local tran = env.tran
 
     local function memorize_callback(self, commits)
+        -- 先禁用原生 memorize 处理，独占执行自定义词频规则
         tran:set_memorize_callback(function() end)
         local ok = pcall(tran.memorize, tran, commits)
         tran:set_memorize_callback(memorize_callback)

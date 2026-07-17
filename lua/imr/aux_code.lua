@@ -1,53 +1,14 @@
-utf8.char_at = function(s, n)
+local function char_at(s, n)
     if n <= 0 then return nil end
-    local start = utf8.offset(s, n)          -- 第 n 个字符的起始字节位置
-    if not start then return nil end         -- n 超出字符串长度
-    local next_start = utf8.offset(s, n + 1) -- 下一个字符起始位置
+    local start = utf8.offset(s, n)
+    if not start then return nil end
+    local next_start = utf8.offset(s, n + 1)
     if not next_start then
-        next_start = #s + 1                  -- 最后一个字符截取到结尾
+        next_start = #s + 1
     end
     return s:sub(start, next_start - 1)
 end
-local function to_string(x, seen)
-    seen = seen or {} -- 用于检测循环引用
-    local t = type(x)
-
-    if t == "nil" then
-        return "nil"
-    elseif t == "boolean" then
-        return x and "true" or "false"
-    elseif t == "number" then
-        return tostring(x)
-    elseif t == "string" then
-        return string.format("%q", x) -- 加双引号并转义内部字符
-    elseif t == "table" then
-        if seen[x] then
-            return "<循环引用>"
-        end
-        seen[x] = true
-        local parts = {}
-        for k, v in pairs(x) do
-            -- 键的表示：字符串加引号，其他直接 tostring
-            local key_str = (type(k) == "string") and string.format("%q", k) or tostring(k)
-            local val_str = to_string(v, seen)
-            table.insert(parts, key_str .. " = " .. val_str)
-        end
-        seen[x] = nil -- 清理，避免影响同级其他分支（可选）
-        return "{" .. table.concat(parts, ", ") .. "}"
-    else
-        -- function, thread, userdata 等类型
-        return "<" .. t .. ": " .. tostring(x) .. ">"
-    end
-end
 local AuxFilter = {}
-local parse_aux_input
-
-local function normalize_trigger(token, fallback)
-    if token == nil or token == "" then
-        return fallback
-    end
-    return token
-end
 
 local function merge_comment(origin, message)
     if not origin or origin == "" then
@@ -62,6 +23,32 @@ end
 -- local log = require 'log'
 -- log.outfile = "aux_code.log"
 
+local function escape_lua_pattern(text)
+    return text:gsub("%W", "%%%1")
+end
+
+local function parse_aux_input(input_code, env)
+    if input_code == "" then
+        return "none", "", ""
+    end
+
+    for _, item in ipairs(env.triggers) do
+        local token = item.token
+        if token ~= "" then
+            local token_pattern = escape_lua_pattern(token)
+            if input_code:find(token, 1, true) then
+                local local_split = input_code:match(token_pattern .. "([^,]+)")
+                if not local_split then
+                    return item.mode, "", token
+                end
+                return item.mode, local_split, token
+            end
+        end
+    end
+
+    return "none", "", ""
+end
+
 function AuxFilter.init(env)
     -- log.info("** AuxCode filter", env.name_space)
     local engine = env.engine
@@ -69,8 +56,8 @@ function AuxFilter.init(env)
 
     env.db = ReverseLookup(config:get_string('db/aux'))
 
-    env.learn_trigger = normalize_trigger(config:get_string("aux/trigger"), nil) or ";"
-    env.no_learn_trigger = normalize_trigger(config:get_string("aux/no_learn_trigger"), "")
+    env.learn_trigger = config:get_string("aux/trigger") or ";"
+    env.no_learn_trigger = config:get_string("aux/no_learn_trigger") or ""
 
     if env.no_learn_trigger == env.learn_trigger then
         env.no_learn_trigger = ""
@@ -94,13 +81,11 @@ function AuxFilter.init(env)
         return #a.token > #b.token
     end)
 
-    -- 兼容旧逻辑，后续任务会替换为 parse 模式
-    env.trigger_key = env.learn_trigger
     -- 设定是否显示辅助码，默认为显示
     env.show_comment = config:get_bool("aux/show_comment")
     if env.show_comment == nil then env.show_comment = true end
     env.normal_comment = config:get_bool("aux/normal_comment") or false
-    if env.show_comment then
+    if env.show_comment or env.normal_comment then
         env.comment_db = ReverseLookup(config:get_string('db/aux_comment'))
     end
 
@@ -115,7 +100,7 @@ function AuxFilter.init(env)
         end
 
         local preedit = ctx:get_preedit()
-        local trigger_pattern = trigger_token:gsub("%W", "%%%1")
+        local trigger_pattern = escape_lua_pattern(trigger_token)
         local removeAuxInput = input:match("([^,]+)" .. trigger_pattern)
         local reeditTextFront = preedit.text:match("([^,]+)" .. trigger_pattern)
 
@@ -142,42 +127,17 @@ function AuxFilter.init(env)
         if reeditTextFront and reeditTextFront:match("[a-z0-9]") then
             -- 給詞尾自動添加分隔符，上面的 re.match 會把分隔符刪掉
             ctx.input = ctx.input .. trigger_token
-
-            -- -- 保留剩余辅码
-            -- 无法获取本次消耗的辅码，暂时取消这个功能
-            -- -- trigger前是 选中的字+剩余的字母，提取 选中的字 到cn_char
-            -- local cn_char = reeditTextFront:gsub('[a-z0-9]', '')
-            -- -- 选中的字对应的辅码长度，aux_count是消耗的辅码的数量
-            -- local aux_count = utf8.len(cn_char) * env.length
-            -- -- 匹配分隔符后的内容，应是辅码（本次消耗的辅码+剩余的辅码）
-            -- local right_text = input:match('[^,]+' .. trigger_pattern .. '([^,]+)')
-            -- ctx.input = ctx.input .. right_text:sub(aux_count + 1)
         else
             -- 剩下的直接上屏
             ctx:commit()
         end
     end)
-    -- AuxFilter.auxcode { ["啊"] = ka,["阿"] = ek,}
+
 end
 
 ----------------
--- 閱讀輔碼文件 --
+-- 辅码匹配辅助函数 --
 ----------------
-
--- local function getUtf8CharLength(byte)
---     if byte < 128 then
---         return 1
---     elseif byte < 224 then
---         return 2
---     elseif byte < 240 then
---         return 3
---     else
---         return 4
---     end
--- end
-
--- 预处理辅码索引，避免在候选循环中重复拆分字符串。
--- k1: 记录每个字可命中的首键；k12: 记录前两键完整命中。
 
 local function char_matches_aux(env, char, auxStr)
     if auxStr == "" then
@@ -224,22 +184,6 @@ local function is_phrase_candidate(cand)
     return cand.type == 'user_phrase' or cand.type == 'phrase' or cand.type == 'simplified'
 end
 
-local function is_multi_char_text(text)
-    if not text or text == "" then
-        return false
-    end
-
-    local count = 0
-    for _ in utf8.codes(text) do
-        count = count + 1
-        if count > 1 then
-            return true
-        end
-    end
-
-    return false
-end
-
 local function append_comment(cand, auxCodes, char)
     local comment = auxCodes:gsub(' ', ',')
     -- if char ~= '' then
@@ -247,7 +191,7 @@ local function append_comment(cand, auxCodes, char)
     -- end
     -- 处理 simplifier
     if cand:get_dynamic_type() == 'Shadow' then
-        local shandow_cand = cand
+        local shadow_cand = cand
         local original_cand = cand:get_genuine()
         if not original_cand then
             cand.comment = merge_comment(cand.comment, comment)
@@ -255,38 +199,12 @@ local function append_comment(cand, auxCodes, char)
         end
         return ShadowCandidate(
             original_cand,
-            original_cand.type, shandow_cand.text,
-            (original_cand.comment or '') .. shandow_cand.comment .. comment
+            original_cand.type, shadow_cand.text,
+            (original_cand.comment or '') .. shadow_cand.comment .. comment
         )
     end
     cand.comment = merge_comment(cand.comment, comment)
     return cand
-end
-
-local function escape_lua_pattern(text)
-    return text:gsub("%W", "%%%1")
-end
-
-parse_aux_input = function(input_code, env)
-    if input_code == "" then
-        return "none", "", ""
-    end
-
-    for _, item in ipairs(env.triggers) do
-        local token = item.token
-        if token ~= "" then
-            local token_pattern = escape_lua_pattern(token)
-            if input_code:find(token, 1, true) then
-                local local_split = input_code:match(token_pattern .. "([^,]+)")
-                if not local_split then
-                    return item.mode, "", token
-                end
-                return item.mode, local_split, token
-            end
-        end
-    end
-
-    return "none", "", ""
 end
 
 local function to_commit_only_candidate(cand)
@@ -310,7 +228,7 @@ function AuxFilter.func(input, env)
         -- 没有输入辅助码引导符，则直接yield所有待选项，不进入后续迭代，提升性能
         for cand in input:iter() do
             if env.normal_comment and cand.type ~= "hub" then
-                local lookup_char = utf8.char_at(cand.text, utf8.len(cand.text))
+                local lookup_char = char_at(cand.text, utf8.len(cand.text))
                 if lookup_char and cand._end == #inputCode then  -- 需要完全匹配
                     local auxCodes = env.comment_db:lookup(lookup_char)
                     cand = append_comment(cand, auxCodes, lookup_char)
@@ -332,18 +250,22 @@ function AuxFilter.func(input, env)
     for _cand in input:iter() do
         local cand = _cand
         if #auxStr == 0 then
-            local lookup_char = utf8.char_at(cand.text, 1)
-                    if lookup_char then
-                        cand = append_comment(cand, env.comment_db:lookup(lookup_char), lookup_char)
+            if env.show_comment then
+                local lookup_char = char_at(cand.text, 1)
+                if lookup_char then
+                    cand = append_comment(cand, env.comment_db:lookup(lookup_char), lookup_char)
+                end
             end
             yield(to_yield_candidate(cand))
         elseif #auxStr > 0 and is_phrase_candidate(cand) then
             local matched_count = find_phrase_match(env, cand.text, auxStr, env.length)
             if matched_count > 0 then
                 if env.show_comment then
-                    local lookup_char = utf8.char_at(cand.text, matched_count + ((#auxStr % env.length == 0 and 1) or 0))
+                    local next_idx = matched_count
+                    if #auxStr % env.length == 0 then next_idx = next_idx + 1 end
+                    local lookup_char = char_at(cand.text, next_idx)
                     if lookup_char then
-                cand = append_comment(cand, env.comment_db:lookup(lookup_char), lookup_char)
+                        cand = append_comment(cand, env.comment_db:lookup(lookup_char), lookup_char)
                     end
                 end
                 yield(to_yield_candidate(cand))

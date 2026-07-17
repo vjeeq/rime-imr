@@ -85,7 +85,7 @@ local Translator = {
 
             local matched   = false
             for cv in string.gmatch(clean_raw, "%S+") do
-                cv = string.sub(cv, 1, -2)
+                cv = cv:gsub("%d$", "")  -- 去掉末尾声调数字 "aa1" → "aa"
                 if string.sub(cv, 1, #code) == code then
                     matched = true; break
                 end
@@ -121,7 +121,7 @@ local Filter = {
         for cand in input:iter() do
             if not active or cand.type == "imr_select_char" then
                 if active and cand.type == "imr_select_char" then
-                    if #code >= 2 then
+                    if #code >= 2 and env.aux_comment_db then
                         cand.comment = env.aux_comment_db:lookup(cand.text) or ""
                     else
                         cand.comment = ""
