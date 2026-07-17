@@ -1,7 +1,9 @@
 const fs = require('fs');
 const path = require('path');
+/** @type {string} */
 const PROJECT_ROOT = path.join(__dirname, '..');
 
+/** @type {Record<string, string>} 本地路径 → 远程下载地址 */
 const files = {
     //// 雾凇
     // 'dicts/ice/8105.dict.yaml': 'https://raw.githubusercontent.com/iDvel/rime-ice/main/cn_dicts/8105.dict.yaml',
@@ -49,11 +51,17 @@ const files = {
 
 // 同步远程数据
 
-
+/**
+ * @type {(url: string, localPath: string) => Promise<boolean|{ok: boolean, warn: boolean}>}
+ */
 const checkAndUpdateFile = require(path.join(PROJECT_ROOT, 'scripts', 'utils', 'fetch'));
 
 
-
+/**
+ * 主函数：批量同步远程文件。
+ * @param {'All'|'wanxiang'} [type='All'] - 同步范围
+ * @returns {Promise<{totalCount: number, successCount: number, skipCount: number, hasWarn: boolean}>}
+ */
 // 主函数
 async function updateFiles(type = 'All') {
     console.log('开始检查并同步文件...');

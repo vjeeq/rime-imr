@@ -1,9 +1,12 @@
 const fs = require('fs');
 const path = require('path');
+/** @type {string} */
 const PROJECT_ROOT = path.join(__dirname, '..');
 const YAML_JS = require(path.join(PROJECT_ROOT, 'scripts', 'utils', 'js-yaml'));
 // [1]万象 [2]墨奇 [3]小鹤 [4]自然码 [5]虎码 [6]五笔 [7]汉心 [8]首右 [9]首右+
+/** @type {number} */
 const AUX_INDEX = require(path.join(PROJECT_ROOT, 'scripts', 'aux_code')).AUX_INDEX;
+/** @type {Record<string, [number, number]>} 九宫格字母→[行号, 列号] */
 const T93_EN_NUM = {
     /**
       # |by*|kvc|qso|
@@ -20,7 +23,8 @@ const T93_EN_NUM = {
     'r': [8, 1], 'u': [8, 2], 'w': [8, 3],
     'h': [9, 1], 'd': [9, 2], 'a': [9, 3],
 }
-// 声调表
+// 声调表：调号字符→[去调拼音, 调值]
+/** @type {Record<string, [string, number]>} */
 const TONE_TABLE = {
     'ā': ['a', 1], 'á': ['a', 2], 'ǎ': ['a', 3], 'à': ['a', 4],
     'ē': ['e', 1], 'é': ['e', 2], 'ě': ['e', 3], 'è': ['e', 4],
@@ -31,7 +35,8 @@ const TONE_TABLE = {
     'ń': ['n', 2], 'ň': ['n', 3], 'ǹ': ['n', 4],
     'ḿ': ['m', 2], 'm̀': ['m', 4],
 };
-// 全拼->自然码
+// 全拼→自然码转换规则
+/** @type {Array<[RegExp, string]>} */
 const XFORM = [
     [/^([aoe])(ng)?$/, '$1$1$2'],
     [/iu$/, 'Q'],
@@ -60,7 +65,11 @@ const XFORM = [
     [/(.)ou$/, '$1B'],
     [/in$/, 'N'],
 ];
-/** 解析 zi.dict.yaml 内容，返回 [{cn, codes:[], tone}] — codes 为自然码双拼数组 */
+/**
+ * 解析 zi.dict.yaml 内容，全拼→自然码双拼。
+ * @param {string} content - zi.dict.yaml 文件内容
+ * @returns {Array<{cn: string, codes: string[], tone: number}>}
+ */
 function parseZiDict(content) {
     const lines = content.split('\n');
     const result = [];
@@ -88,7 +97,13 @@ function parseZiDict(content) {
     }
     return result;
 }
+/** @type {Record<string, (source_map: Record<string, string>) => Record<string, string>>} */
 const TRANSFORMER = {
+    /**
+     * 万象辅助码 → 辅助码字典（DPY + T93）
+     * @param {{txt: string}} source_map
+     * @returns {{DPY: string, T93: string}}
+     */
     wanxiang_auxcode({ txt: source_context }) {
         return source_context.split('\n')
             .map(line => line.trim())
@@ -124,6 +139,11 @@ const TRANSFORMER = {
                 return result;
             }, { DPY: '', T93: '' })
     },
+    /**
+     * 万象辅助码注释 → 注释字典
+     * @param {{txt: string}} source_map
+     * @returns {{comment: string}}
+     */
     wanxiang_auxcode_comment({ txt: source_context }) {
         return source_context.split('\n')
             .map(line => line.trim())
@@ -138,6 +158,11 @@ const TRANSFORMER = {
                 return result
             }, { comment: '' })
     },
+    /**
+     * 万象 pro：给每个词条的拼音加辅助码后缀。
+     * @param {Record<string, string>} source_map - aux_txt, zi, jichu, lianxiang 等
+     * @returns {Record<string, string>}
+     */
     wanxiang_pro(source_map) {
         const aux_map = source_map.aux_txt.split('\n')
             .map(line => line.trim())
@@ -179,6 +204,11 @@ const TRANSFORMER = {
                 return result;
             }, {})
     },
+    /**
+     * 雾凇英文 + 中英混输三合一。用 zi.dict 的合法自然码前缀过滤短词。
+     * @param {{en_dict: string, en_ext_dict: string, cn_en_txt: string}} source_map
+     * @returns {{english: string}}
+     */
     ice_english_merge(source_map) {
         const { en_dict, en_ext_dict, cn_en_txt } = source_map;
 
@@ -221,6 +251,11 @@ const TRANSFORMER = {
 
         return { english: merged };
     },
+    /**
+     * 万象方案 → 语法模型参数
+     * @param {{schema: string}} source_map
+     * @returns {{grammar: string}}
+     */
     grammar(source_map) {
         const source = source_map.schema
         const source_json = YAML_JS.load(source)
@@ -234,6 +269,11 @@ const TRANSFORMER = {
         const target = YAML_JS.dump(target_json)
         return { grammar: target }
     },
+    /**
+     * 万象字表 → 拼音源字典（DPY 双拼 + T93 九键）
+     * @param {{zi: string}} source_map
+     * @returns {{DPY: string, T93: string}}
+     */
     wanxiang_source(source_map) {
         const TONE_DPY = { 1: '1', 2: '2', 3: '3', 4: '4', 5: '5' };
         const TONE_T93 = { 1: 'a', 2: 'b', 3: 'c', 4: 'd', 5: 'e' };
@@ -252,6 +292,11 @@ const TRANSFORMER = {
         return { DPY, T93 };
     }
 }
+
+/**
+ * 转换流水线配置：每个条目定义了一组 源文件→变形函数→目标文件。
+ * @type {Array<{source: Record<string,string>, target: Record<string,any>, transform: Function}>}
+ */
 const files = [
     {
         // 万象原始字拼音
@@ -349,8 +394,10 @@ const files = [
     }
 ]
 
-// 读取ZRM_wanxiang.dict.yaml文件并处理
-
+/**
+ * 主函数：按 files 配置逐条执行转换。
+ * @returns {void}
+ */
 function work() {
     files.forEach(file => {
         const source = file.source;

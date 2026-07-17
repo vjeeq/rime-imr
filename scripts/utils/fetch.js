@@ -3,17 +3,30 @@
 const fs = require('fs');
 const path = require('path');
 
+/** @type {string} 项目根目录 */
 const PROJECT_ROOT = path.join(__dirname, '..', '..');
 
+/**
+ * @param {string} localPath
+ * @returns {string}
+ */
 function etagPath(localPath) {
     return path.join(PROJECT_ROOT, 'etags', localPath + '.etag');
 }
 
+/**
+ * @param {string} localPath
+ * @returns {string|null}
+ */
 function loadETag(localPath) {
     const p = etagPath(localPath);
     return fs.existsSync(p) ? fs.readFileSync(p, 'utf-8').trim() : null;
 }
 
+/**
+ * @param {string} localPath
+ * @param {string} etag
+ */
 function saveETag(localPath, etag) {
     const p = etagPath(localPath);
     const dir = path.dirname(p);
@@ -21,6 +34,10 @@ function saveETag(localPath, etag) {
     fs.writeFileSync(p, etag, 'utf-8');
 }
 
+/**
+ * @param {Response} response
+ * @returns {Promise<ArrayBuffer>}
+ */
 async function downloadStream(response) {
     const contentLength = response.headers.get('content-length');
     const contentEncoding = response.headers.get('content-encoding');
@@ -63,6 +80,12 @@ async function downloadStream(response) {
     return buf.buffer;
 }
 
+/**
+ * 同步远程文件：支持 ETag 缓存校验、进度显示。
+ * @param {string} url - 远程文件地址
+ * @param {string} localPath - 相对于项目根目录的本地路径
+ * @returns {Promise<boolean|{ok: boolean, warn: boolean}>} 返回 true 表示成功，或 {ok, warn} 表示有告警
+ */
 async function syncFile(url, localPath) {
     const fullPath = path.join(PROJECT_ROOT, localPath);
     const dir = path.dirname(fullPath);

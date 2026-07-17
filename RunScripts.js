@@ -1,6 +1,11 @@
 const path = require('path')
+/** @type {string} */
 const PROJECT_ROOT = __dirname;
+/**
+ * @type {(type?: string) => Promise<{totalCount: number, successCount: number, skipCount: number, hasWarn: boolean}>}
+ */
 const updateFiles = require(path.join(PROJECT_ROOT, 'scripts', 'download'));
+/** @type {() => void} */
 const transform = require(path.join(PROJECT_ROOT, 'scripts', 'transform'));
 
 const args = process.argv.slice(2);
