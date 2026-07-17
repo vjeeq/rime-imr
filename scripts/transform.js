@@ -20,6 +20,74 @@ const T93_EN_NUM = {
     'r': [8, 1], 'u': [8, 2], 'w': [8, 3],
     'h': [9, 1], 'd': [9, 2], 'a': [9, 3],
 }
+// 声调表
+const TONE_TABLE = {
+    'ā': ['a', 1], 'á': ['a', 2], 'ǎ': ['a', 3], 'à': ['a', 4],
+    'ē': ['e', 1], 'é': ['e', 2], 'ě': ['e', 3], 'è': ['e', 4],
+    'ī': ['i', 1], 'í': ['i', 2], 'ǐ': ['i', 3], 'ì': ['i', 4],
+    'ō': ['o', 1], 'ó': ['o', 2], 'ǒ': ['o', 3], 'ò': ['o', 4],
+    'ū': ['u', 1], 'ú': ['u', 2], 'ǔ': ['u', 3], 'ù': ['u', 4],
+    'ǖ': ['v', 1], 'ǘ': ['v', 2], 'ǚ': ['v', 3], 'ǜ': ['v', 4],
+    'ń': ['n', 2], 'ň': ['n', 3], 'ǹ': ['n', 4],
+    'ḿ': ['m', 2], 'm̀': ['m', 4],
+};
+// 全拼->自然码
+const XFORM = [
+    [/^([aoe])(ng)?$/, '$1$1$2'],
+    [/iu$/, 'Q'],
+    [/[iu]a$/, 'W'],
+    [/[uv]an$/, 'R'],
+    [/[uv]e$/, 'T'],
+    [/ing$|uai$/, 'Y'],
+    [/^sh/, 'U'],
+    [/^ch/, 'I'],
+    [/^zh/, 'V'],
+    [/uo$/, 'O'],
+    [/[uv]n$/, 'P'],
+    [/(.)i?ong$/, '$1S'],
+    [/[iu]ang$/, 'D'],
+    [/(.)en$/, '$1F'],
+    [/(.)eng$/, '$1G'],
+    [/(.)ang$/, '$1H'],
+    [/ian$/, 'M'],
+    [/(.)an$/, '$1J'],
+    [/iao$/, 'C'],
+    [/(.)ao$/, '$1K'],
+    [/(.)ai$/, '$1L'],
+    [/(.)ei$/, '$1Z'],
+    [/ie$/, 'X'],
+    [/ui$/, 'V'],
+    [/(.)ou$/, '$1B'],
+    [/in$/, 'N'],
+];
+/** 解析 zi.dict.yaml 内容，返回 [{cn, codes:[], tone}] — codes 为自然码双拼数组 */
+function parseZiDict(content) {
+    const lines = content.split('\n');
+    const result = [];
+    for (const line of lines) {
+        const parts = line.trim().split('\t');
+        if (parts.length < 2 || parts[0].startsWith('#')) continue;
+        const cn = parts[0];
+        let pinyin = parts[1];
+        let tone = 5;
+        const tm = pinyin.match(new RegExp(Object.keys(TONE_TABLE).join('|')));
+        if (tm) {
+            const [b, t] = TONE_TABLE[tm[0]];
+            tone = t;
+            pinyin = pinyin.replace(tm[0], b);
+        }
+        pinyin = pinyin.replace(/^ng$/, 'eng').replace(/^n$/, 'en').replace(/^m$/, 'me');
+        const d1 = /^([jqxy])u$/.exec(pinyin);
+        const d2 = /^([aoe])([ioun])$/.exec(pinyin);
+        const codes = [...new Set(
+            [pinyin, d1 && d1[1] + 'v', d2 && d2[1] + d2[1] + d2[2]].filter(Boolean).map(
+                sp => XFORM.reduce((s, [p, r]) => s.replace(p, r), sp).toLowerCase()
+            )
+        )];
+        result.push({ cn, codes, tone });
+    }
+    return result;
+}
 const TRANSFORMER = {
     wanxiang_auxcode({ txt: source_context }) {
         return source_context.split('\n')
@@ -114,13 +182,25 @@ const TRANSFORMER = {
     ice_english_merge(source_map) {
         const { en_dict, en_ext_dict, cn_en_txt } = source_map;
 
+        // 从 zi.dict.yaml 提取所有合法自然码 2 字母前缀
+        const ziContent = fs.readFileSync(path.join(__dirname, '..', 'dicts/wanxiang/zi.dict.yaml'), 'utf8');
+        const ziChars = parseZiDict(ziContent);
+        const valid2Letter = new Set(ziChars.flatMap(zc => zc.codes.map(c => c.substring(0, 2))));
+
         const parseDict = (txt) => txt.split('\n')
             .map(l => l.trim())
             .filter(l => l && l[0] !== '#' && l !== '---' && l !== '...')
             .map(l => l.split('\t'))
             .filter(p => p.length >= 1 && p[0])
             .filter(p => /^[a-zA-Z0-9]+$/.test(p[0]))
-            .filter(p => p[0].length >= 4 || p[0] !== p[0].toLowerCase())
+            .filter(p => {
+                const code = p[0];
+                if (code.length <= 3 && code === code.toLowerCase()) {
+                    // 前2字母不是自然码 → 不可能有中文冲突 → 保留
+                    return !valid2Letter.has(code.substring(0, 2));
+                }
+                return true;
+            })
             .map(p => `${p[0]}\t${p[1] || p[0]}`);
 
         const enWords = [...new Set(parseDict(en_dict))];
@@ -155,78 +235,13 @@ const TRANSFORMER = {
         return { grammar: target }
     },
     wanxiang_source(source_map) {
-        const TONE_TABLE = {
-            'ā': ['a', 1], 'á': ['a', 2], 'ǎ': ['a', 3], 'à': ['a', 4],
-            'ē': ['e', 1], 'é': ['e', 2], 'ě': ['e', 3], 'è': ['e', 4],
-            'ī': ['i', 1], 'í': ['i', 2], 'ǐ': ['i', 3], 'ì': ['i', 4],
-            'ō': ['o', 1], 'ó': ['o', 2], 'ǒ': ['o', 3], 'ò': ['o', 4],
-            'ū': ['u', 1], 'ú': ['u', 2], 'ǔ': ['u', 3], 'ù': ['u', 4],
-            'ǖ': ['v', 1], 'ǘ': ['v', 2], 'ǚ': ['v', 3], 'ǜ': ['v', 4],
-            'ń': ['n', 2], 'ň': ['n', 3], 'ǹ': ['n', 4],
-            'ḿ': ['m', 2], 'm̀': ['m', 4],
-        };
-        const TONE_RE = /ā|á|ǎ|à|ē|é|ě|è|ī|í|ǐ|ì|ō|ó|ǒ|ò|ū|ú|ǔ|ù|ǖ|ǘ|ǚ|ǜ|ń|ň|ǹ|ḿ|m̀/;
-        const XFORM = [
-            [/^([aoe])(ng)?$/, '$1$1$2'],
-            [/iu$/, 'Q'],
-            [/[iu]a$/, 'W'],
-            [/[uv]an$/, 'R'],
-            [/[uv]e$/, 'T'],
-            [/ing$|uai$/, 'Y'],
-            [/^sh/, 'U'],
-            [/^ch/, 'I'],
-            [/^zh/, 'V'],
-            [/uo$/, 'O'],
-            [/[uv]n$/, 'P'],
-            [/(.)i?ong$/, '$1S'],
-            [/[iu]ang$/, 'D'],
-            [/(.)en$/, '$1F'],
-            [/(.)eng$/, '$1G'],
-            [/(.)ang$/, '$1H'],
-            [/ian$/, 'M'],
-            [/(.)an$/, '$1J'],
-            [/iao$/, 'C'],
-            [/(.)ao$/, '$1K'],
-            [/(.)ai$/, '$1L'],
-            [/(.)ei$/, '$1Z'],
-            [/ie$/, 'X'],
-            [/ui$/, 'V'],
-            [/(.)ou$/, '$1B'],
-            [/in$/, 'N'],
-        ];
-        const toNaturalCode = sp => XFORM.reduce((s, [p, r]) => s.replace(p, r), sp).toLowerCase();
         const TONE_DPY = { 1: '1', 2: '2', 3: '3', 4: '4', 5: '5' };
         const TONE_T93 = { 1: 'a', 2: 'b', 3: 'c', 4: 'd', 5: 'e' };
 
-        const lines = source_map.zi.split('\n');
+        const chars = parseZiDict(source_map.zi);
         let DPY = '', T93 = '';
 
-        for (const line of lines) {
-            const parts = line.trim().split('\t');
-            if (parts.length < 2 || parts[0].startsWith('#')) {
-                continue;
-            }
-            const cn = parts[0];
-            let pinyin = parts[1];
-
-            // 提取声调
-            let tone = 5;
-            const tm = pinyin.match(TONE_RE);
-            if (tm) {
-                const [b, t] = TONE_TABLE[tm[0]];
-                tone = t;
-                pinyin = pinyin.replace(tm[0], b);
-            }
-
-            pinyin = pinyin.replace(/^ng$/, 'eng').replace(/^n$/, 'en').replace(/^m$/, 'me');
-
-            // 全拼 → 自然码 (algebra)
-            const d1 = /^([jqxy])u$/.exec(pinyin);
-            const d2 = /^([aoe])([ioun])$/.exec(pinyin);
-            const codes = [...new Set(
-                [pinyin, d1 && d1[1] + 'v', d2 && d2[1] + d2[1] + d2[2]].filter(Boolean).map(toNaturalCode)
-            )];
-
+        for (const { cn, codes, tone } of chars) {
             codes.forEach(sp => {
                 DPY += `${cn}\t${sp}${TONE_DPY[tone]}\n`;
                 const [r1, c1] = T93_EN_NUM[sp[0]] || [], [r2, c2] = T93_EN_NUM[sp[1]] || [];
