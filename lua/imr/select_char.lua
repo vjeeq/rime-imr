@@ -105,11 +105,28 @@ local Translator = {
 }
 
 local Filter = {
-    init = function(env) end,
+    init = function(env)
+        local config = env.engine.schema.config
+        env.aux_comment_db = ReverseLookup(config:get_string("db/aux_comment"))
+        env.trigger = config:get_string("select_char/trigger") or ":"
+    end,
     func = function(input, env)
         local active = state.mode ~= ""
+        local code = ""
+        if active then
+            local full_input = env.engine.context.input or ""
+            local pos = string.find(full_input, env.trigger, 1, true)
+            code = pos and string.sub(full_input, pos + 1) or ""
+        end
         for cand in input:iter() do
             if not active or cand.type == "imr_select_char" then
+                if active and cand.type == "imr_select_char" then
+                    if #code >= 2 then
+                        cand.comment = env.aux_comment_db:lookup(cand.text) or ""
+                    else
+                        cand.comment = ""
+                    end
+                end
                 yield(cand)
             end
         end
