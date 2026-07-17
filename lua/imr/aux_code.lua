@@ -181,7 +181,10 @@ local function find_phrase_match(env, word, _auxStr, length)
 end
 
 local function is_phrase_candidate(cand)
-    return cand.type == 'user_phrase' or cand.type == 'phrase' or cand.type == 'simplified'
+    return cand.type == 'user_phrase'
+        or cand.type == 'phrase'
+        or cand.type == 'simplified'
+        or cand.type == 'sentence'
 end
 
 local function append_comment(cand, auxCodes, char)
@@ -227,7 +230,7 @@ function AuxFilter.func(input, env)
     if mode == "none" then
         -- 没有输入辅助码引导符，则直接yield所有待选项，不进入后续迭代，提升性能
         for cand in input:iter() do
-            if env.normal_comment and cand.type ~= "hub" then
+            if env.normal_comment and is_phrase_candidate(cand) then
                 local lookup_char = char_at(cand.text, utf8.len(cand.text))
                 if lookup_char and cand._end == #inputCode then  -- 需要完全匹配
                     local auxCodes = env.comment_db:lookup(lookup_char)
@@ -250,7 +253,7 @@ function AuxFilter.func(input, env)
     for _cand in input:iter() do
         local cand = _cand
         if #auxStr == 0 then
-            if env.show_comment then
+            if env.show_comment and is_phrase_candidate(cand) then
                 local lookup_char = char_at(cand.text, 1)
                 if lookup_char then
                     cand = append_comment(cand, env.comment_db:lookup(lookup_char), lookup_char)
