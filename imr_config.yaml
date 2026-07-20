@@ -119,11 +119,11 @@ speller:
           - derive/^([a-z]{2})<[1-5]>(?=$|;)/${1}/ 
           - xform/^(.*);.*$/${1}/
 
-          - xform/<1>/7/
-          - xform/<2>/8/
-          - xform/<3>/9/
-          - xform/<4>/0/
-          - xform/<5>/00/
+          - xform/<1>/6/
+          - xform/<2>/7/
+          - xform/<3>/8/
+          - xform/<4>/9/
+          - xform/<5>/0/
     imr_DPY_pro:
       __patch:
         - __append: {__include: speller/algebra/声调}
@@ -155,11 +155,11 @@ speller:
           - derive|^([a-z]{2})([a-z])([a-z])$|$1$2\u$3|            # abcD
           - derive|^([a-z]{2})([a-z])([a-z])$|$1\u$2\u$3|          # abCD
           
-          - xform/<1>/7/
-          - xform/<2>/8/
-          - xform/<3>/9/
-          - xform/<4>/0/
-          - xform/<5>/00/
+          - xform/<1>/6/
+          - xform/<2>/7/
+          - xform/<3>/8/
+          - xform/<4>/9/
+          - xform/<5>/0/
     imr_T93:
       __patch:
         - __append: {__include: speller/algebra/声调}

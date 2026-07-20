@@ -114,11 +114,11 @@ translator:
   spelling_hints: none
   initial_quality: 1.2          # 拼音的权重应该比英文大
   preedit_format:
-    - xform/00/⁰/
-    - xform/7/¹/
-    - xform/8/²/
-    - xform/9/³/
-    - xform/0/⁴/
+    - xform/6/¹/
+    - xform/7/²/
+    - xform/8/³/
+    - xform/9/⁴/
+    - xform/0/⁰/
 
 # 次翻译器，英文
 imr_en:
@@ -218,7 +218,7 @@ editor:
 # 拼写设定
 speller:
   # 如果不想让什么标点直接上屏，可以加在 alphabet，或者编辑标点符号为两个及以上的映射
-  alphabet: zyxwvutsrqponmlkjihgfedcbaZYXWVUTSRQPONMLKJIHGFEDCBA:;7890/
+  alphabet: zyxwvutsrqponmlkjihgfedcbaZYXWVUTSRQPONMLKJIHGFEDCBA:;67890/
   # initials 定义仅作为始码的按键，排除 ` 让单个的 ` 可以直接上屏
   initials: zyxwvutsrqponmlkjihgfedcbaZYXWVUTSRQPONMLKJIHGFEDCBA
   delimiter: " '"  # 第一位<空格>是拼音之间的分隔符；第二位<'>表示可以手动输入单引号来分割拼音。
