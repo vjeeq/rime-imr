@@ -114,11 +114,7 @@ translator:
   spelling_hints: none
   initial_quality: 1.2          # 拼音的权重应该比英文大
   preedit_format:
-    - xform/6/¹/
-    - xform/7/²/
-    - xform/8/³/
-    - xform/9/⁴/
-    - xform/0/⁰/
+    __include: imr_config:/translator/preedit_format/imr_DPY
 
 # 次翻译器，英文
 imr_en:
