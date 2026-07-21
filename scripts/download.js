@@ -29,9 +29,7 @@ const files = {
     'dicts/wanxiang/shici.dict.yaml': 'https://cnb.cool/amzxyz/rime-wanxiang/-/git/raw/wanxiang/dicts/shici.dict.yaml',
     'dicts/wanxiang/diming.dict.yaml': 'https://cnb.cool/amzxyz/rime-wanxiang/-/git/raw/wanxiang/dicts/diming.dict.yaml',
     //// 万象辅助码
-    'downloads/wanxiang/aux_code.txt': 'https://cnb.cool/amzxyz/rime-wanxiang/-/git/raw/wanxiang/custom/aux_code.txt',
-    //// 万象自然码辅助码注释
-    'downloads/wanxiang/aux_chaifen.txt': require(path.join(PROJECT_ROOT, 'scripts', 'aux_code')).AUX_CF_URL,
+    'downloads/wanxiang/aux_code.csv': 'https://cnb.cool/amzxyz/rime-wanxiang/-/git/raw/wanxiang/custom/aux_code.csv',
     //// 雾凇英文
     'downloads/ice/en.dict.yaml': 'https://cdn.jsdelivr.net/gh/iDvel/rime-ice@main/en_dicts/en.dict.yaml',
     'downloads/ice/en_ext.dict.yaml': 'https://cdn.jsdelivr.net/gh/iDvel/rime-ice@main/en_dicts/en_ext.dict.yaml',

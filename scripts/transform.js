@@ -3,9 +3,9 @@ const path = require('path');
 /** @type {string} */
 const PROJECT_ROOT = path.join(__dirname, '..');
 const YAML_JS = require(path.join(PROJECT_ROOT, 'scripts', 'utils', 'js-yaml'));
-// [1]万象 [2]墨奇 [3]小鹤 [4]自然码 [5]虎码 [6]五笔 [7]汉心 [8]首右 [9]首右+
-/** @type {number} */
-const AUX_INDEX = require(path.join(PROJECT_ROOT, 'scripts', 'aux_code')).AUX_INDEX;
+const { parse: csvParse } = require(path.join(PROJECT_ROOT, 'scripts', 'utils', 'csv-parse'));
+/** @type {string} */
+const AUX_TYPE = '墨奇';
 /** @type {Record<string, [number, number]>} 九宫格字母→[行号, 列号] */
 const T93_EN_NUM = {
     /**
@@ -101,84 +101,87 @@ function parseZiDict(content) {
 const TRANSFORMER = {
     /**
      * 万象辅助码 → 辅助码字典（DPY + T93）
-     * @param {{txt: string}} source_map
+     * @param {{csv: string}} source_map
      * @returns {{DPY: string, T93: string}}
      */
-    wanxiang_auxcode({ txt: source_context }) {
-        return source_context.split('\n')
-            .map(line => line.trim())
-            .filter(line => line)
-            .filter(line => line.charAt(0) != '#')
-            .map(line => line.split('\t', 2))
-            .filter(arr => arr.length === 2)
-            .map(([cn, code_str]) => [cn, code_str.split(';')])
-            .filter(([cn, code_arr]) => code_arr.length >= AUX_INDEX + 1)
-            .map(([cn, code_arr]) => [cn, code_arr[AUX_INDEX]])
-            // code包含','
-            .filter(([cn, code]) => code)
-            .flatMap(([cn, code]) => code.split(',').map(code => [cn, code]))
-            .filter(([cn, code]) => code)
-            .map(([cn, code]) => {
+    wanxiang_auxcode({ csv: content }) {
+        const rows = csvParse(content, { bom: true, skip_empty_lines: true, columns: false, relax_column_count: true });
+        const header = rows[0];
+        const colIdx = header.indexOf(AUX_TYPE);
+        const cnIdx = 0;
+        let DPY = '', T93 = '';
+        for (let i = 1; i < rows.length; i++) {
+            const row = rows[i];
+            const cn = (row[cnIdx] || '').trim();
+            const field = (row[colIdx] || '').trim();
+            if (!cn || !field) continue;
+            const parts = field.split('|').map(p => p.trim());
+            const codes = [];
+            for (const part of parts) {
+                const raw = part.includes(' ') ? part.split(' ').pop() : part;
+                raw.split(',').map(c => c.trim()).filter(c => c && /^[a-z]+$/.test(c)).forEach(c => codes.push(c));
+            }
+            for (const code of codes) {
+                DPY += `${cn}\t${code}\n`;
                 if (code.length >= 2) {
                     const en1 = code.charAt(0);
                     const en2 = code.charAt(1);
                     const p1 = T93_EN_NUM[en1], p2 = T93_EN_NUM[en2];
-                    if (!p1 || !p2) return [cn, code, undefined];
-                    const number1 = p1[0];
-                    const number2 = p2[0];
-                    const number3 = (p1[1] - 1) * 3 + p2[1];
-                    return [cn, code, [`${number1}${number2}${number3}`, `${number1}${number2}0`]]
+                    if (!p1 || !p2) continue;
+                    const n1 = p1[0], n2 = p2[0], n3 = (p1[1] - 1) * 3 + p2[1];
+                    T93 += `${cn}\t${n1}${n2}${n3}\n${cn}\t${n1}${n2}0\n`;
                 }
-                return [cn, code, undefined]
-            })
-            .reduce((result, [cn, DPY, T93]) => {
-                result.DPY += `${cn}\t${DPY}\n`;
-                if (T93) {
-                    result.T93 += `${cn}\t${T93[0]}\n${cn}\t${T93[1]}\n`;
-                }
-                return result;
-            }, { DPY: '', T93: '' })
+            }
+        }
+        return { DPY, T93 };
     },
     /**
      * 万象辅助码注释 → 注释字典
-     * @param {{txt: string}} source_map
+     * @param {{csv: string}} source_map
      * @returns {{comment: string}}
      */
-    wanxiang_auxcode_comment({ txt: source_context }) {
-        return source_context.split('\n')
-            .map(line => line.trim())
-            .filter(line => line)
-            .filter(line => line.charAt(0) != '#')
-            .map(line => line.split('\t', 2))
-            .filter(arr => arr.length === 2)
-            .flatMap(([cn, comments]) => comments.replaceAll(' ', '').split('｜').map(comment => [cn, comment]))
-            .filter(([cn, comment]) => comment)
-            .reduce((result, [cn, comment]) => {
-                result.comment += `${cn}\t${comment}\n`
-                return result
-            }, { comment: '' })
+    wanxiang_auxcode_comment({ csv: content }) {
+        const rows = csvParse(content, { bom: true, skip_empty_lines: true, columns: false, relax_column_count: true });
+        const header = rows[0];
+        const colIdx = header.indexOf(AUX_TYPE);
+        const cnIdx = 0;
+        let comment = '';
+        for (let i = 1; i < rows.length; i++) {
+            const row = rows[i];
+            const cn = (row[cnIdx] || '').trim();
+            const field = (row[colIdx] || '').trim();
+            if (!cn || !field) continue;
+            comment += `${cn}\t${field.replace(/ /g, '')}\n`;
+        }
+        return { comment };
     },
     /**
      * 万象 pro：给每个词条的拼音加辅助码后缀。
-     * @param {Record<string, string>} source_map - aux_txt, zi, jichu, lianxiang 等
+     * @param {Record<string, string>} source_map - aux_csv, zi, jichu, lianxiang 等
      * @returns {Record<string, string>}
      */
     wanxiang_pro(source_map) {
-        const aux_map = source_map.aux_txt.split('\n')
-            .map(line => line.trim())
-            .filter(line => line)
-            .filter(line => line.charAt(0) != '#')
-            .map(line => line.split('\t', 2))
-            .filter(arr => arr.length === 2)
-            .map(([cn, en_str]) => [cn, en_str.split(';')])
-            .filter(([_, en_arr]) => en_arr.length >= AUX_INDEX + 1)
-            .map(([cn, en_arr]) => [cn, en_arr[AUX_INDEX]])
-            .filter(([cn, code]) => code)
-            .reduce((aux_map, [cn, code]) => {
-                aux_map[cn] = code;
-                return aux_map;
-            }, {})
-        return Object.keys(source_map).filter(key => key != 'aux_txt')
+        const rows = csvParse(source_map.aux_csv, { bom: true, skip_empty_lines: true, columns: false, relax_column_count: true });
+        const header = rows[0];
+        const colIdx = header.indexOf(AUX_TYPE);
+        const cnIdx = 0;
+        const aux_map = {};
+        for (let i = 1; i < rows.length; i++) {
+            const row = rows[i];
+            const cn = (row[cnIdx] || '').trim();
+            const field = (row[colIdx] || '').trim();
+            if (!cn || !field) continue;
+            const parts = field.split('|').map(p => p.trim());
+            const codes = [];
+            for (const part of parts) {
+                const raw = part.includes(' ') ? part.split(' ').pop() : part;
+                raw.split(',').map(c => c.trim()).filter(c => c && /^[a-z]+$/.test(c)).forEach(c => codes.push(c));
+            }
+            if (codes.length > 0) {
+                aux_map[cn] = codes.join(',');
+            }
+        }
+        return Object.keys(source_map).filter(key => key != 'aux_csv')
             .map(key => ({ key, context: source_map[key] }))
             .map(({ key, context }) => {
                 let source_lines = context.split('\n');
@@ -317,7 +320,7 @@ const files = [
     },
     {  // 万象辅助码 => 辅助码字典
         source: {
-            txt: 'downloads/wanxiang/aux_code.txt',
+            csv: 'downloads/wanxiang/aux_code.csv',
         },
         target: {
             DPY: {
@@ -333,7 +336,7 @@ const files = [
     },
     {  // 万象辅助码注释 => 注释字典
         source: {
-            txt: 'downloads/wanxiang/aux_chaifen.txt',
+            csv: 'downloads/wanxiang/aux_code.csv',
         },
         target: {
             comment: {
@@ -345,7 +348,7 @@ const files = [
     },
     { // 万象pro
         source: {
-            aux_txt: 'downloads/wanxiang/aux_code.txt',
+            aux_csv: 'downloads/wanxiang/aux_code.csv',
             zi: 'dicts/wanxiang/zi.dict.yaml',
             jichu: 'dicts/wanxiang/jichu.dict.yaml',
             lianxiang: 'dicts/wanxiang/lianxiang.dict.yaml',

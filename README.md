@@ -21,3 +21,12 @@ node RunScripts.js
 ```
 
 小狼毫会读取配置目录、编译所有 schema 和 dict，输出到 `build/`。
+
+### 本地工具文件来源
+
+以下文件从 npm 包提取，存放于 `scripts/utils/`，无需运行时 `npm install`：
+
+| 本地路径 | 来源 npm 包 | 原始路径 |
+|---|---|---|
+| `scripts/utils/js-yaml.js` | `npm install js-yaml` | `node_modules/js-yaml/dist/js-yaml.cjs.js` |
+| `scripts/utils/csv-parse.js` | `npm install csv` | `node_modules/csv-parse/dist/cjs/sync.cjs` |
