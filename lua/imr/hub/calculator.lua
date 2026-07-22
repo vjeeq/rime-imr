@@ -87,22 +87,31 @@ function M.translate(input, seg)
     local express = string.sub(input, string.len(M.prefix) + 1)
     if express == "" then return r end
     express = string.gsub(express, " ", "")
-    local code = string.gsub(express, "([0-9]+)!", "fact(%1)")
+    local display = string.lower(express):gsub("(%d+%.?%d*)du", "%1°"):gsub("(%d+%.?%d*)o", "%1°")
+    local code = string.lower(express)
+    local trig_set = { sin=true, sinh=true, cos=true, cosh=true, tan=true, tanh=true, asin=true, acos=true, atan=true }
+    code = code:gsub("(%a+)%(([^%(%)]+)%)", function(fn, arg)
+        if not trig_set[fn] then return fn .. "(" .. arg .. ")" end
+        arg = arg:gsub("(%d+%.?%d*)o%f[^a-z]", "(%1 * pi / 180)")
+        arg = arg:gsub("(%d+%.?%d*)du%f[^a-z]", "(%1 * pi / 180)")
+        return fn .. "(" .. arg .. ")"
+    end)
+    code = string.gsub(code, "([0-9]+)!", "fact(%1)")
     code = code .. " "
     code = string.gsub(code, "(%b())%%(%D)", function(block, tail) return "(" .. block .. "/100)" .. tail end)
     code = string.gsub(code, "(%d+%.?%d*)%%(%D)", function(num, tail) return "(" .. num .. "/100)" .. tail end)
     code = string.sub(code, 1, -2)
     local fn = load("return " .. code, "calculate", "t", calcPlugin)
     if not fn then
-        r[#r + 1] = { express, 99999, "解析失败", express }
+        r[#r + 1] = { display, 99999, "解析失败", display }
         return r
     end
     local success, result = pcall(fn)
     if success and result and (type(result) == "string" or type(result) == "number") and #tostring(result) > 0 then
-        r[#r + 1] = { result, 99999, nil, express }
-        r[#r + 1] = { express .. "=" .. result, 99999, nil, express }
+        r[#r + 1] = { result, 99999, nil, display }
+        r[#r + 1] = { display .. "=" .. result, 99999, nil, display }
     else
-        r[#r + 1] = { express, 99999, "解析失败", express }
+        r[#r + 1] = { display, 99999, "解析失败", display }
     end
     return r
 end
