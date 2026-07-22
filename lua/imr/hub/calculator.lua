@@ -87,9 +87,14 @@ function M.translate(input, seg)
     local express = string.sub(input, string.len(M.prefix) + 1)
     if express == "" then return r end
     express = string.gsub(express, " ", "")
-    local display = string.lower(express):gsub("(%d+%.?%d*)du", "%1°"):gsub("(%d+%.?%d*)o", "%1°")
-    local code = string.lower(express)
     local trig_set = { sin=true, sinh=true, cos=true, cosh=true, tan=true, tanh=true, asin=true, acos=true, atan=true }
+    local code = string.lower(express)
+    local display = express
+    display = display:gsub("(%a+)%(([^%(%)]+)%)", function(fn, arg)
+        if not trig_set[string.lower(fn)] then return fn .. "(" .. arg .. ")" end
+        arg = arg:gsub("(%d+%.?%d*)[dD][uU]", "%1°"):gsub("(%d+%.?%d*)[oO]", "%1°")
+        return fn .. "(" .. arg .. ")"
+    end)
     code = code:gsub("(%a+)%(([^%(%)]+)%)", function(fn, arg)
         if not trig_set[fn] then return fn .. "(" .. arg .. ")" end
         arg = arg:gsub("(%d+%.?%d*)o%f[^a-z]", "(%1 * pi / 180)")
