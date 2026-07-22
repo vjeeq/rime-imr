@@ -11,7 +11,7 @@ local Processor = {
             -- 声调快速修改：6=一声 7=二声 8=三声 9=四声 0=轻声
             if key_repr:match('^[67890]$') then
                 local text = context.input
-                if not text:match(';') then
+                if not text:match(';') and not text:match('^cC') then
                     local last = text:sub(-1)
                     if last:match('^[67890]$') then
                         if last == key_repr then
