@@ -113,85 +113,85 @@ speller:
       - xform/<([1-9])[1-3]>/${1}/
     imr_DPY:
       __patch:
-        - __append: {__include: speller/algebra/声调}
-        - __append: {__include: speller/algebra/自然码}
+        - __append: { __include: speller/algebra/声调 }
+        - __append: { __include: speller/algebra/自然码 }
         - __append:
-          - derive/^([a-z]{2})<[1-5]>(?=$|;)/${1}/ 
-          - xform/^(.*);.*$/${1}/
+            - derive/^([a-z]{2})<[1-5]>(?=$|;)/${1}/
+            - xform/^(.*);.*$/${1}/
 
-          - xform/<1>/6/
-          - xform/<2>/7/
-          - xform/<3>/8/
-          - xform/<4>/9/
-          - xform/<5>/0/
+            - xform/<1>/6/
+            - xform/<2>/7/
+            - xform/<3>/8/
+            - xform/<4>/9/
+            - xform/<5>/0/
     imr_DPY_pro:
       __patch:
-        - __append: {__include: speller/algebra/声调}
-        - __append: {__include: speller/algebra/自然码}
+        - __append: { __include: speller/algebra/声调 }
+        - __append: { __include: speller/algebra/自然码 }
         - __append:
-          - derive|^([a-z]+)(<[1-5]>);.*$|$1|     # 双拼
-          - derive|^([a-z]+)(<[1-5]>);.*$|$1$2|   # 双拼+声调
-          # 分号后面第一组辅助码
-          - derive|^([a-z]+)(<[1-5]>);([a-z]).*$|$1$3|    # abc  双拼+1位辅助码
-          - derive|^([a-z]+)(<[1-5]>);([a-z]).*$|$1$2$3|  # ab1c 双拼+声调+1位辅助码
-          - abbrev|^([a-z]+)(<[1-5]>);([a-z])([a-z]).*$|$1$3$4|    # abcd   双拼+2位辅助码
-          - derive|^([a-z]+)(<[1-5]>);([a-z])([a-z]).*$|$1$3$4/|   # abcd/  双拼+2位辅助码+/
-          - derive|^([a-z]+)(<[1-5]>);([a-z])([a-z]).*$|$1$2$3$4|  # ab1cd  双拼+声调+2位辅助码
-          - derive|^([a-z]+)(<[1-5]>);([a-z])([a-z]).*$|$1$2$3$4/| # ab1cd/ 双拼+声调+2位辅助码+/
-          # 分号后面第二组辅助码
-          - derive|^([a-z]+)(<[1-5]>);[^,]*,([a-z]).*$|$1$3|      # abc  双拼+1位辅助码
-          - derive|^([a-z]+)(<[1-5]>);[^,]*,([a-z]).*$|$1$2$3|    # ab1c 双拼+声调+1位辅助码
-          - abbrev|^([a-z]+)(<[1-5]>);[^,]*,([a-z])([a-z]).*$|$1$3$4|    # abcd   双拼+2位辅助码
-          - derive|^([a-z]+)(<[1-5]>);[^,]*,([a-z])([a-z]).*$|$1$3$4/|   # abcd/  双拼+2位辅助码+/
-          - derive|^([a-z]+)(<[1-5]>);[^,]*,([a-z])([a-z]).*$|$1$2$3$4|  # ab1cd  双拼+声调+2位辅助码
-          - derive|^([a-z]+)(<[1-5]>);[^,]*,([a-z])([a-z]).*$|$1$2$3$4/| # ab1cd/ 双拼+声调+2位辅助码+/
-          - erase/.*;.*/
-          # 大写 ab1c ab1cd
-          - derive|^([a-z]{2})(<[1-5]>)([a-z])([a-z]?)$|$1$2\u$3$4|     # ab1C(d)
-          - derive|^([a-z]{2})(<[1-5]>)([a-z])([a-z])$|$1$2\u$3\u$4|    # ab1CD
-          - derive|^([a-z]{2})(<[1-5]>)([a-z])([a-z]?)$|$1$2\u$3$4/|    # ab1C(d)/
-          - derive|^([a-z]{2})(<[1-5]>)([a-z])([a-z])$|$1$2\u$3\u$4/|   # ab1CD/
-          - derive|^([a-z]{2})(<[1-5]>)([a-z])([a-z])$|$1$2$3\u$4/|     # ab1cD/
-          # 大写 abc abcd
-          - derive|^([a-z]{2})([a-z])([a-z]?)$|$1\u$2$3|     # abC(d)
-          - derive|^([a-z]{2})([a-z])([a-z])$|$1\u$2\u$3|    # abCD
-          - derive|^([a-z]{2})([a-z])([a-z]?)$|$1\u$2$3/|    # abC(d)/
-          - derive|^([a-z]{2})([a-z])([a-z])$|$1\u$2\u$3/|   # abCD/
-          - derive|^([a-z]{2})([a-z])([a-z])$|$1$2\u$3/|     # abcD/
-          
-          - xform/<1>/6/
-          - xform/<2>/7/
-          - xform/<3>/8/
-          - xform/<4>/9/
-          - xform/<5>/0/
+            - derive|^([a-z]+)(<[1-5]>);.*$|$1| # 双拼
+            - derive|^([a-z]+)(<[1-5]>);.*$|$1$2| # 双拼+声调
+            # 分号后面第一组辅助码
+            - derive|^([a-z]+)(<[1-5]>);([a-z]).*$|$1$3| # abc  双拼+1位辅助码
+            - derive|^([a-z]+)(<[1-5]>);([a-z]).*$|$1$2$3| # ab1c 双拼+声调+1位辅助码
+            - abbrev|^([a-z]+)(<[1-5]>);([a-z])([a-z]).*$|$1$3$4| # abcd   双拼+2位辅助码
+            - derive|^([a-z]+)(<[1-5]>);([a-z])([a-z]).*$|$1$3$4/| # abcd/  双拼+2位辅助码+/
+            - derive|^([a-z]+)(<[1-5]>);([a-z])([a-z]).*$|$1$2$3$4| # ab1cd  双拼+声调+2位辅助码
+            - derive|^([a-z]+)(<[1-5]>);([a-z])([a-z]).*$|$1$2$3$4/| # ab1cd/ 双拼+声调+2位辅助码+/
+            # 分号后面第二组辅助码
+            - derive|^([a-z]+)(<[1-5]>);[^,]*,([a-z]).*$|$1$3| # abc  双拼+1位辅助码
+            - derive|^([a-z]+)(<[1-5]>);[^,]*,([a-z]).*$|$1$2$3| # ab1c 双拼+声调+1位辅助码
+            - abbrev|^([a-z]+)(<[1-5]>);[^,]*,([a-z])([a-z]).*$|$1$3$4| # abcd   双拼+2位辅助码
+            - derive|^([a-z]+)(<[1-5]>);[^,]*,([a-z])([a-z]).*$|$1$3$4/| # abcd/  双拼+2位辅助码+/
+            - derive|^([a-z]+)(<[1-5]>);[^,]*,([a-z])([a-z]).*$|$1$2$3$4| # ab1cd  双拼+声调+2位辅助码
+            - derive|^([a-z]+)(<[1-5]>);[^,]*,([a-z])([a-z]).*$|$1$2$3$4/| # ab1cd/ 双拼+声调+2位辅助码+/
+            - erase/.*;.*/
+            # 大写 ab1c ab1cd
+            - derive|^([a-z]{2})(<[1-5]>)([a-z])([a-z]?)$|$1$2\u$3$4| # ab1C(d)
+            - derive|^([a-z]{2})(<[1-5]>)([a-z])([a-z])$|$1$2\u$3\u$4| # ab1CD
+            - derive|^([a-z]{2})(<[1-5]>)([a-z])([a-z]?)$|$1$2\u$3$4/| # ab1C(d)/
+            - derive|^([a-z]{2})(<[1-5]>)([a-z])([a-z])$|$1$2\u$3\u$4/| # ab1CD/
+            - derive|^([a-z]{2})(<[1-5]>)([a-z])([a-z])$|$1$2$3\u$4/| # ab1cD/
+            # 大写 abc abcd
+            - derive|^([a-z]{2})([a-z])([a-z]?)$|$1\u$2$3| # abC(d)
+            - derive|^([a-z]{2})([a-z])([a-z])$|$1\u$2\u$3| # abCD
+            - derive|^([a-z]{2})([a-z])([a-z]?)$|$1\u$2$3/| # abC(d)/
+            - derive|^([a-z]{2})([a-z])([a-z])$|$1\u$2\u$3/| # abCD/
+            - derive|^([a-z]{2})([a-z])([a-z])$|$1$2\u$3/| # abcD/
+
+            - xform/<1>/6/
+            - xform/<2>/7/
+            - xform/<3>/8/
+            - xform/<4>/9/
+            - xform/<5>/0/
     imr_T93:
       __patch:
-        - __append: {__include: speller/algebra/声调}
-        - __append: {__include: speller/algebra/自然码}
-        - __append: {__include: speller/algebra/九宫格}
+        - __append: { __include: speller/algebra/声调 }
+        - __append: { __include: speller/algebra/自然码 }
+        - __append: { __include: speller/algebra/九宫格 }
         - __append:
-          - derive/^([1-9])[1-9]{2}(?=$|(<[1-5]>))/${1}00/  # N00
-          - derive/^([1-9][1-9])[1-9](?=$|(<[1-5]>))/${1}0/ # NN0
+            - derive/^([1-9])[1-9]{2}(?=$|(<[1-5]>))/${1}00/ # N00
+            - derive/^([1-9][1-9])[1-9](?=$|(<[1-5]>))/${1}0/ # NN0
 
-          - derive/^(...)<[1-5]>(?=$|;)/${1}/
-          - xform/^(.*);.*$/${1}/
+            - derive/^(...)<[1-5]>(?=$|;)/${1}/
+            - xform/^(.*);.*$/${1}/
 
-          - xform/<1>/a/
-          - xform/<2>/b/
-          - xform/<3>/c/
-          - xform/<4>/d/
-          - xform/<5>/e/
+            - xform/<1>/a/
+            - xform/<2>/b/
+            - xform/<3>/c/
+            - xform/<4>/d/
+            - xform/<5>/e/
     imr_DPY_radical_pinyin:
       __patch:
-        - __append: {__include: speller/algebra/自然码}
+        - __append: { __include: speller/algebra/自然码 }
         - __append:
-          - xform/'//
+            - xform/'//
     imr_T93_radical_pinyin:
       __patch:
-        - __append: {__include: speller/algebra/自然码}
-        - __append: {__include: speller/algebra/九宫格}
+        - __append: { __include: speller/algebra/自然码 }
+        - __append: { __include: speller/algebra/九宫格 }
         - __append:
-          - xform/'//
+            - xform/'//
 translator:
   preedit_format:
     自然码:
@@ -274,83 +274,88 @@ translator:
       - xform/<4>/⁴/
       - xform/<5>/⁰/
       - xform/<6>//
-    初始化:
-      imr_T93:
-        - xform/a/<1>/
-        - xform/b/<2>/
-        - xform/c/<3>/
-        - xform/d/<4>/
-        - xform/e/<5>/
-        - xform/(^|[ '])([1-9])([0-9])([0-9])(?=$|[ '])/${1}${2}${3}${4}<6>/
-        # 第三键
-        - xform/(^|[ '])([1-9])([1-9])1/${1}<${2}1><${3}1>/
-        - xform/(^|[ '])([1-9])([1-9])2/${1}<${2}1><${3}2>/
-        - xform/(^|[ '])([1-9])([1-9])3/${1}<${2}1><${3}3>/
-        - xform/(^|[ '])([1-9])([1-9])4/${1}<${2}2><${3}1>/
-        - xform/(^|[ '])([1-9])([1-9])5/${1}<${2}2><${3}2>/
-        - xform/(^|[ '])([1-9])([1-9])6/${1}<${2}2><${3}3>/
-        - xform/(^|[ '])([1-9])([1-9])7/${1}<${2}3><${3}1>/
-        - xform/(^|[ '])([1-9])([1-9])8/${1}<${2}3><${3}2>/
-        - xform/(^|[ '])([1-9])([1-9])9/${1}<${2}3><${3}3>/
-        # 九宫格数字映射
-        # |by*|kvc|qso|
-        # |fnz|pix|gte|
-        # |jml|ruw|hda|
-        - xform/<11>/b/
-        - xform/<12>/y/
-        - xform/<21>/k/
-        - xform/<22>/v/
-        - xform/<23>/c/
-        - xform/<31>/q/
-        - xform/<32>/s/
-        - xform/<33>/o/
-        - xform/<41>/f/
-        - xform/<42>/n/
-        - xform/<43>/z/
-        - xform/<51>/p/
-        - xform/<52>/i/
-        - xform/<53>/x/
-        - xform/<61>/g/
-        - xform/<62>/t/
-        - xform/<63>/e/
-        - xform/<71>/j/
-        - xform/<72>/m/
-        - xform/<73>/l/
-        - xform/<81>/r/
-        - xform/<82>/u/
-        - xform/<83>/w/
-        - xform/<91>/h/
-        - xform/<92>/d/
-        - xform/<93>/a/
-      imr_DPY_radical_lookup:
-        - xform/([a-z]{2})(?=[^'])/${1}'/
-      imr_T93_radical_lookup:
-        - xform/([1-9]{3})(?=[^'])/${1}'/
+    T93:
+      # 第三键
+      - xform/(^|[ '])([1-9])([1-9])1/${1}<${2}1><${3}1>/
+      - xform/(^|[ '])([1-9])([1-9])2/${1}<${2}1><${3}2>/
+      - xform/(^|[ '])([1-9])([1-9])3/${1}<${2}1><${3}3>/
+      - xform/(^|[ '])([1-9])([1-9])4/${1}<${2}2><${3}1>/
+      - xform/(^|[ '])([1-9])([1-9])5/${1}<${2}2><${3}2>/
+      - xform/(^|[ '])([1-9])([1-9])6/${1}<${2}2><${3}3>/
+      - xform/(^|[ '])([1-9])([1-9])7/${1}<${2}3><${3}1>/
+      - xform/(^|[ '])([1-9])([1-9])8/${1}<${2}3><${3}2>/
+      - xform/(^|[ '])([1-9])([1-9])9/${1}<${2}3><${3}3>/
+      # 九宫格数字映射
+      # |by*|kvc|qso|
+      # |fnz|pix|gte|
+      # |jml|ruw|hda|
+      - xform/<11>/b/
+      - xform/<12>/y/
+      - xform/<21>/k/
+      - xform/<22>/v/
+      - xform/<23>/c/
+      - xform/<31>/q/
+      - xform/<32>/s/
+      - xform/<33>/o/
+      - xform/<41>/f/
+      - xform/<42>/n/
+      - xform/<43>/z/
+      - xform/<51>/p/
+      - xform/<52>/i/
+      - xform/<53>/x/
+      - xform/<61>/g/
+      - xform/<62>/t/
+      - xform/<63>/e/
+      - xform/<71>/j/
+      - xform/<72>/m/
+      - xform/<73>/l/
+      - xform/<81>/r/
+      - xform/<82>/u/
+      - xform/<83>/w/
+      - xform/<91>/h/
+      - xform/<92>/d/
+      - xform/<93>/a/
     imr_T93:
       __patch:
-        - __append: {__include: translator/preedit_format/初始化/imr_T93}
-        - __append: {__include: translator/preedit_format/自然码}
-        - __append: {__include: translator/preedit_format/声调}
+        - __append:
+            - xform/a/<1>/
+            - xform/b/<2>/
+            - xform/c/<3>/
+            - xform/d/<4>/
+            - xform/e/<5>/
+            - xform/(^|[ '])([1-9])([0-9])([0-9])(?=$|[ '])/${1}${2}${3}${4}<6>/
+        - __append: { __include: translator/preedit_format/T93 }
+        - __append: { __include: translator/preedit_format/自然码 }
+        - __append: { __include: translator/preedit_format/声调 }
     imr_DPY:
       __patch:
         - __append:
-          - xform/6/<1>/
-          - xform/7/<2>/
-          - xform/8/<3>/
-          - xform/9/<4>/
-          - xform/0/<5>/
+            - xform/6/<1>/
+            - xform/7/<2>/
+            - xform/8/<3>/
+            - xform/9/<4>/
+            - xform/0/<5>/
           # - xform/(^|[ '])([a-z]+)(?=$|[ '])/${1}${2}${3}<6>/
-        - __append: {__include: translator/preedit_format/自然码}
-        - __append: {__include: translator/preedit_format/声调}
-        
+        - __append: { __include: translator/preedit_format/自然码 }
+        - __append: { __include: translator/preedit_format/声调 }
+
     imr_DPY_radical_lookup:
       __patch:
-        - __append: {__include: translator/preedit_format/初始化/imr_DPY_radical_lookup}
-        - __append: {__include: translator/preedit_format/自然码}
+        - __append:
+            - xform/([a-z]{2})(?=[^'])/${1}'/
+            - xform/([a-z]{2})/${1}<6>/
+        - __append: { __include: translator/preedit_format/自然码 }
+        - __append:
+            - xform/<6>//
     imr_T93_radical_lookup:
       __patch:
-        - __append: {__include: translator/preedit_format/初始化/imr_T93_radical_lookup}
-        - __append: {__include: translator/preedit_format/imr_T93}
+        - __append:
+            - xform/([1-9]{3})(?=[^'])/${1}'/
+            - xform/([1-9]{3})/${1}<6>/
+        - __append: { __include: translator/preedit_format/T93 }
+        - __append: { __include: translator/preedit_format/自然码 }
+        - __append:
+            - xform/<6>//
     imr_T93_stroke_lookup:
       - xlit/12345/⼀⼁⼃⼂⼄/
 
