@@ -1,3 +1,17 @@
+-- 声调处理不干扰 functional mode（calculator / unicode / number 等）
+local FUNCTION_TAGS = { unicode = true, number = true, calculator = true, gregorian_to_lunar = true, radical_lookup = true }
+
+local function is_function_mode(ctx)
+    if ctx.composition:empty() then return false end
+    local seg = ctx.composition:back()
+    if seg then
+        for tag, _ in pairs(FUNCTION_TAGS) do
+            if seg:has_tag(tag) then return true end
+        end
+    end
+    return false
+end
+
 local Processor = {
     init = function(env) end,
     func = function(key, env)
@@ -11,7 +25,7 @@ local Processor = {
             -- 声调快速修改：6=一声 7=二声 8=三声 9=四声 0=轻声
             if key_repr:match('^[67890]$') then
                 local text = context.input
-                if not text:match(';') and not text:match('^cC') then
+                if not text:match(';') and not is_function_mode(context) then
                     local last = text:sub(-1)
                     if last:match('^[67890]$') then
                         if last == key_repr then
