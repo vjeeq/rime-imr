@@ -29,7 +29,7 @@ function M.func(input, seg)
             if cands then
                 for _, c in ipairs(cands) do
                     local cand = Candidate("hub", seg.start, seg._end, c[1], c[3] or "")
-                    cand.quality = c[2] or 100
+                    cand.quality = tonumber(c[2]) or 100
                     yield(cand)
                 end
             end

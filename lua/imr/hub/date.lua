@@ -35,7 +35,10 @@ function M.translate(input, seg)
         table.insert(r, { os.date("%Y/%m/%d", t) })
         table.insert(r, { os.date("%Y.%m.%d", t) })
         table.insert(r, { os.date("%Y%m%d", t) })
-        table.insert(r, { string.gsub(string.gsub(os.date("%Y年%m月%d日", t), "年0", "年"), "月0", "月") })
+        local s = os.date("%Y年%m月%d日", t)
+        s = string.gsub(s, "年0", "年")
+        s = string.gsub(s, "月0", "月")
+        table.insert(r, { s })
 
     elseif input == k.time then
         local h = tonumber(os.date("%H", t))
@@ -74,7 +77,10 @@ function M.translate(input, seg)
         local d = convert(tonumber(os.date("%d", t)))
         table.insert(r, { string.format("%s年%s月%s日", yo, m, d) })
         table.insert(r, { string.format("%s年%s月%s日", yz, m, d) })
-        table.insert(r, { string.gsub(string.gsub(os.date("%Y年%m月%d日", t), "年0", "年"), "月0", "月") })
+        local s = os.date("%Y年%m月%d日", t)
+        s = string.gsub(s, "年0", "年")
+        s = string.gsub(s, "月0", "月")
+        table.insert(r, { s })
 
     elseif input == k.date_en then
         local day = tonumber(os.date("%d", t))
