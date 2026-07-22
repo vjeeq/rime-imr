@@ -94,15 +94,15 @@ function M.translate(input, seg)
     code = string.sub(code, 1, -2)
     local fn = load("return " .. code, "calculate", "t", calcPlugin)
     if not fn then
-        r[#r + 1] = { express, 99999, "解析失败" }
+        r[#r + 1] = { express, 99999, "解析失败", express }
         return r
     end
     local success, result = pcall(fn)
     if success and result and (type(result) == "string" or type(result) == "number") and #tostring(result) > 0 then
-        r[#r + 1] = { result, 99999 }
-        r[#r + 1] = { express .. "=" .. result, 99999 }
+        r[#r + 1] = { result, 99999, nil, express }
+        r[#r + 1] = { express .. "=" .. result, 99999, nil, express }
     else
-        r[#r + 1] = { express, 99999, "解析失败" }
+        r[#r + 1] = { express, 99999, "解析失败", express }
     end
     return r
 end
