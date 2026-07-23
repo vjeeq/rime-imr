@@ -2,12 +2,15 @@
 # encoding: utf-8
 #
 # IMR 英文词库（含中英混输）
-# 由 transform.js 合并 en + en_ext + cn_en 生成
+# 由 transform.js 从 ice/en + ice/en_ext + ice/cn_en 转换生成
 #
+# en + en_ext → dicts/ice/en（纯英文）
+# cn_en       → dicts/ice/en_cn（中英混输，可单独注释关闭）
 
 ---
 name: imr_en
 version: zzz
 import_tables:
-  - dicts/ice/english
+  - dicts/ice/en
+  - dicts/ice/en_cn
 ...

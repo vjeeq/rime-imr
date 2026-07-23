@@ -246,13 +246,14 @@ const TRANSFORMER = {
             .filter(p => p.length >= 2 && p[1])
             .map(([cn, code]) => `${cn}\t${code.toLowerCase()}`);
 
-        const merged = [
+        const enMerged = [
             ...enWords,
             ...enExtWords,
-            ...cnEnLines,
         ].map(s => s + '\n').join('');
 
-        return { english: merged };
+        const cnEnMerged = cnEnLines.map(s => s + '\n').join('');
+
+        return { en: enMerged, en_cn: cnEnMerged };
     },
     /**
      * 万象方案 → 语法模型参数
@@ -369,16 +370,20 @@ const files = [
         transform: TRANSFORMER.wanxiang_pro,
     },
     {
-        // 雾凇混输
+        // 雾凇英文/中英
         source: {
             en_dict: 'downloads/ice/en.dict.yaml',
             en_ext_dict: 'downloads/ice/en_ext.dict.yaml',
             cn_en_txt: 'downloads/ice/cn_en_double_pinyin.txt',
         },
         target: {
-            english: {
-                file: 'dicts/ice/english.dict.yaml',
-                name: 'english',
+            en: {
+                file: 'dicts/ice/en.dict.yaml',
+                name: 'en',
+            },
+            en_cn: {
+                file: 'dicts/ice/en_cn.dict.yaml',
+                name: 'en_cn',
             },
         },
         transform: TRANSFORMER.ice_english_merge,
