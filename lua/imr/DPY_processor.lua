@@ -1,19 +1,25 @@
--- 声调处理不干扰 functional mode（calculator / unicode / number 等）
-local FUNCTION_TAGS = { unicode = true, number = true, calculator = true, gregorian_to_lunar = true, radical_lookup = true }
-
-local function is_function_mode(ctx)
-    if ctx.composition:empty() then return false end
-    local seg = ctx.composition:back()
-    if seg then
-        for tag, _ in pairs(FUNCTION_TAGS) do
-            if seg:has_tag(tag) then return true end
-        end
-    end
-    return false
-end
-
 local Processor = {
-    init = function(env) end,
+    init = function(env)
+        local engine = env.engine
+        local notifier = engine.context.update_notifier:connect(function(ctx)
+            local input = ctx.input
+            if input == "" then return end
+
+            local new_input = input:gsub("([a-z]+)([7890]+)$", function(letters, tones)
+                if #tones == 1 then return letters .. tones end
+                if #tones == 2 and tones:sub(1, 1) == tones:sub(2, 2) then
+                    return letters
+                end
+                return letters .. tones:sub(-1)
+            end)
+
+            if new_input ~= input then
+                ctx:pop_input(#input)
+                ctx:push_input(new_input)
+            end
+        end)
+        env.tone_notifier = notifier
+    end,
     func = function(key, env)
         local engine = env.engine
         local context = engine.context
@@ -22,24 +28,6 @@ local Processor = {
             and (context:is_composing() or context:has_menu())
         then
             local key_repr = key:repr()
-            -- 声调快速修改：6=一声 7=二声 8=三声 9=四声 0=轻声
-            if key_repr:match('^[67890]$') then
-                local text = context.input
-                if not text:match(';') and not is_function_mode(context) then
-                    local last = text:sub(-1)
-                    if last:match('^[67890]$') then
-                        if last == key_repr then
-                            context.input = text:sub(1, -2)
-                        else
-                            context.input = text:sub(1, -2) .. key_repr
-                        end
-                        return 1
-                    elseif text:match('[a-z][a-z]$') then
-                        context.input = text .. key_repr
-                        return 1
-                    end
-                end
-            end
             -- 辅码模式处理，允许输入/删除辅码
             if context.input:match(';') then
                 if key_repr:match('^[a-z]$') then
@@ -57,7 +45,10 @@ local Processor = {
             end
         end
         return 2
-    end
+    end,
+    fini = function(env)
+        env.tone_notifier:disconnect()
+    end,
 }
 
 return Processor
