@@ -39,7 +39,7 @@ const files = {
 // 同步远程数据
 
 /**
- * @type {(url: string, localPath: string) => Promise<boolean|{ok: boolean, warn: boolean}>}
+ * @type {(url: string, localPath: string) => Promise<{ok: boolean}>}
  */
 const checkAndUpdateFile = require(path.join(PROJECT_ROOT, 'scripts', 'utils', 'fetch'));
 
@@ -62,8 +62,8 @@ async function updateFiles() {
         totalCount++;
         try {
             const result = await checkAndUpdateFile(remoteUrl, filePath);
-            if (result?.warn) hasWarn = true;
-            if (result) successCount++;
+            if (!result.ok) hasWarn = true;
+            successCount++;
         } catch (err) {
             console.error(`\n[严重错误] 文件 ${filePath} 下载失败，终止流程`);
             throw err;

@@ -84,7 +84,7 @@ async function downloadStream(response) {
  * 同步远程文件：支持 ETag 缓存校验、进度显示。
  * @param {string} url - 远程文件地址
  * @param {string} localPath - 相对于项目根目录的本地路径
- * @returns {Promise<boolean|{ok: boolean, warn: boolean}>} 返回 true 表示成功，或 {ok, warn} 表示有告警
+ * @returns {Promise<{ok: boolean}>}
  */
 async function syncFile(url, localPath) {
     const fullPath = path.join(PROJECT_ROOT, localPath);
@@ -112,7 +112,7 @@ async function syncFile(url, localPath) {
 
     if (response.status === 304) {
         console.log('结果：远程文件未变化（304），无需下载。', localPath);
-        return true;
+        return { ok: true };
     }
 
     if (!response.ok) throw new Error(`请求失败: ${response.status} ${response.statusText}`);
@@ -120,7 +120,7 @@ async function syncFile(url, localPath) {
     const newETag = response.headers.get('etag');
     if (newETag === cachedETag && fs.existsSync(fullPath)) {
         console.log('结果：远程文件未变化（ETag 相同），无需下载。', localPath);
-        return true;
+        return { ok: true };
     }
 
     console.log('[下载]', url, localPath);
@@ -136,12 +136,12 @@ async function syncFile(url, localPath) {
         if (newETag) saveETag(localPath, newETag);
         console.log(`[更新] 新 ETag: ${newETag}`);
         console.log('=============================');
-        return { ok: true, warn: true };
+        return { ok: false };
     }
     if (newETag) saveETag(localPath, newETag);
     console.log(`[更新] 新 ETag: ${newETag}`);
     console.log('=============================');
-    return true;
+    return { ok: true };
 }
 
 module.exports = syncFile;
