@@ -227,7 +227,7 @@ auxcode:
   no_learn_trigger: ';;'
   length: 2
   show_comment: true
-  normal_comment: true
+  normal_comment: false
 
 db:
   source: imr_DPY_source

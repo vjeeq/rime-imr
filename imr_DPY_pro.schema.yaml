@@ -7,3 +7,5 @@ translator:
 speller:
   algebra:
     __include: config/algebra:/imr_DPY_pro
+auxcode:
+  normal_comment: true
