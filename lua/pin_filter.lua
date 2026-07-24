@@ -30,6 +30,9 @@ function M.func(input, env)
         return
     end
 
+    local ctx = env.engine.context
+    local full_preedit = (ctx:get_preedit().text or ""):gsub("[^a-zA-Z]", "")
+
     local lookup = M.lookup
     local firsts = {}
     local rest = {}
@@ -39,7 +42,12 @@ function M.func(input, env)
         local cand = it(input)
         if not cand then break end
         if lookup[cand.text] then
-            firsts[cand.text] = cand
+            local cand_pre = (cand.preedit or ""):gsub("[^a-zA-Z]", "")
+            if cand_pre == full_preedit then
+                firsts[cand.text] = cand
+            else
+                rest[#rest + 1] = cand
+            end
         else
             rest[#rest + 1] = cand
         end
