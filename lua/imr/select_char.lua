@@ -49,7 +49,7 @@ local Processor = {
 local Translator = {
     init = function(env)
         local config = env.engine.schema.config
-        env.aux_db = ReverseLookup(config:get_string("db/aux"))
+        env.aux_db = ReverseLookup(config:get_string("db/auxcode"))
         env.pinyin_db = ReverseLookup(config:get_string("db/source"))
         env.trigger = config:get_string("select_char/trigger") or ":"
     end,
@@ -107,7 +107,7 @@ local Translator = {
 local Filter = {
     init = function(env)
         local config = env.engine.schema.config
-        env.aux_comment_db = ReverseLookup(config:get_string("db/aux_comment"))
+        env.aux_comment_db = ReverseLookup(config:get_string("db/auxcode_comment"))
         env.trigger = config:get_string("select_char/trigger") or ":"
     end,
     func = function(input, env)

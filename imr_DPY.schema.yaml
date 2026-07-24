@@ -70,7 +70,7 @@ switches:
 engine:
   processors:
     - lua_processor@*imr.DPY_processor
-    - lua_processor@*imr.backspace_limiter
+    - lua_processor@*imr.backspace_processor
     - lua_processor@*imr.select_char*Processor
     - ascii_composer
     - recognizer
@@ -92,17 +92,17 @@ engine:
     - lua_translator@*imr.imr_script_translator@translator
     - table_translator@imr_en            # 英文输入
     - table_translator@radical_lookup    # 部件拆字反查
-    - lua_translator@*imr.hub
+    - lua_translator@*imr.hub_translator
     - lua_translator@*imr.select_char*Translator
     - lua_translator@*imr.gc
   filters:
     - lua_filter@*imr.pin_filter                       # 单字置顶
-    - lua_filter@*imr.tatata                        
+    - lua_filter@*imr.order_filter
     - lua_filter@*autocap_filter                    # 英文自动大写
     - simplifier@emoji                              # Emoji
     - simplifier@traditionalize                     # 简繁切换
     - reverse_lookup_filter@radical_reverse_lookup  # 部件拆字滤镜
-    - lua_filter@*imr.aux_code
+    - lua_filter@*imr.auxcode_filter
     - lua_filter@*imr.select_char*Filter
     - uniquifier                                    # 去重
 
@@ -222,7 +222,7 @@ speller:
   algebra:
     __include: imr_config:/speller/algebra/imr_DPY
 
-aux:
+auxcode:
   trigger: ';'
   no_learn_trigger: ';;'
   length: 2
@@ -231,12 +231,12 @@ aux:
 
 db:
   source: imr_DPY_source
-  aux: imr_DPY_auxcode
-  aux_comment: imr_auxcode_comment
+  auxcode: imr_DPY_auxcode
+  auxcode_comment: imr_auxcode_comment
 
 __include: imr_grammar:/
 
-tatata:
+order:
   - words: ['他','她','它']
     type: contains      # 左右模糊
   - words: ['那', '哪']

@@ -54,10 +54,10 @@ function AuxFilter.init(env)
     local engine = env.engine
     local config = engine.schema.config
 
-    env.db = ReverseLookup(config:get_string('db/aux'))
+    env.db = ReverseLookup(config:get_string('db/auxcode'))
 
-    env.learn_trigger = config:get_string("aux/trigger") or ";"
-    env.no_learn_trigger = config:get_string("aux/no_learn_trigger") or ""
+    env.learn_trigger = config:get_string("auxcode/trigger") or ";"
+    env.no_learn_trigger = config:get_string("auxcode/no_learn_trigger") or ""
 
     if env.no_learn_trigger == env.learn_trigger then
         env.no_learn_trigger = ""
@@ -67,7 +67,7 @@ function AuxFilter.init(env)
         { mode = "no_learn", token = env.no_learn_trigger },
         { mode = "learn",    token = env.learn_trigger },
     }
-    env.length = config:get_int('aux/length') or 2
+    env.length = config:get_int('auxcode/length') or 2
 
     local active_triggers = {}
     for _, item in ipairs(env.triggers) do
@@ -82,11 +82,11 @@ function AuxFilter.init(env)
     end)
 
     -- 设定是否显示辅助码，默认为显示
-    env.show_comment = config:get_bool("aux/show_comment")
+    env.show_comment = config:get_bool("auxcode/show_comment")
     if env.show_comment == nil then env.show_comment = true end
-    env.normal_comment = config:get_bool("aux/normal_comment") or false
+    env.normal_comment = config:get_bool("auxcode/normal_comment") or false
     if env.show_comment or env.normal_comment then
-        env.comment_db = ReverseLookup(config:get_string('db/aux_comment'))
+        env.comment_db = ReverseLookup(config:get_string('db/auxcode_comment'))
     end
 
     ----------------------------

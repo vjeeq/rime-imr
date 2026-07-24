@@ -4,7 +4,7 @@
 -- 非匹配项原位不动，组间不交叉。
 --
 -- 配置：
---   tatata:
+--   order:
 --     - words: ['他','她','它']
 --       type: contains      # 左右模糊
 --     - words: ['那', '哪']
@@ -99,7 +99,7 @@ local M = {}
 
 function M.init(env)
     local config = env.engine.schema.config
-    local top = config:get_list("tatata")
+    local top = config:get_list("order")
     if top == nil then
         M.groups = { { words = { "他", "她", "它" }, typ = "contains" } }
         return
@@ -107,7 +107,7 @@ function M.init(env)
     M.groups = {}
     local i = 0
     while true do
-        local base = "tatata/@" .. i
+        local base = "order/@" .. i
         local wlist = config:get_list(base .. "/words")
         local words = {}
         if wlist and wlist.size > 0 then
