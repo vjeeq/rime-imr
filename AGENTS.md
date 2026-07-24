@@ -2,7 +2,9 @@
 
 ## 部署
 
-运行 Weasel 安装目录下的 `WeaselDeployer.exe /deploy`。
+全盘搜索 WeaselDeployer.exe（遍历所有本地磁盘分区，不局限 C 盘），找到后执行部署（路径含空格需 `&` 调用）：
+
+    & "<安装目录>\WeaselDeployer.exe" /deploy
 
 - 改 Lua 文件后需要部署以触发模块重载
 - 改 schema.yaml/dict.yaml 文件后需要部署以触发重编译
