@@ -31,9 +31,9 @@ schema:
 
 engine:
   processors:
-    - lua_processor@*imr.T93_processor
-    - lua_processor@*imr.backspace_processor
-    - lua_processor@*imr.select_char*Processor
+    - lua_processor@*T93_processor
+    - lua_processor@*backspace_processor
+    - lua_processor@*select_char*Processor
     - ascii_composer
     - recognizer
     - key_binder
@@ -52,20 +52,20 @@ engine:
     - fallback_segmentor
   translators:
     - punct_translator
-    - lua_translator@*imr.imr_script_translator@translator
+    - lua_translator@*imr_script_translator@translator
     - table_translator@radical_lookup    # 部件拆字反查
     - table_translator@stroke_lookup     # 笔画拆字反查
-    - lua_translator@*imr.select_char*Translator
-    - lua_translator@*imr.gc
+    - lua_translator@*select_char*Translator
+    - lua_translator@*gc
   filters:
-    - lua_filter@*imr.pin_filter
-    - lua_filter@*imr.order_filter
+    - lua_filter@*pin_filter
+    - lua_filter@*order_filter
     - simplifier@emoji # Emoji
     - simplifier@traditionalize # 简繁切换
     - reverse_lookup_filter@reverse_lookup  # 部件拆字滤镜
-    - lua_filter@*imr.auxcode_filter
-    - lua_filter@*imr.T93_filter
-    - lua_filter@*imr.select_char*Filter
+    - lua_filter@*auxcode_filter
+    - lua_filter@*T93_filter
+    - lua_filter@*select_char*Filter
     - uniquifier # 去重
 
 

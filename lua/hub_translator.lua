@@ -1,10 +1,10 @@
 local modules = {
-    date   = require("imr.hub.date"),
-    lunar  = require("imr.hub.lunar"),
-    uuid   = require("imr.hub.uuid"),
-    unicode = require("imr.hub.unicode"),
-    number = require("imr.hub.number"),
-    calculator = require("imr.hub.calculator"),
+    date   = require("hub.date"),
+    lunar  = require("hub.lunar"),
+    uuid   = require("hub.uuid"),
+    unicode = require("hub.unicode"),
+    number = require("hub.number"),
+    calculator = require("hub.calculator"),
 }
 
 local order = { "date", "lunar", "uuid", "unicode", "number", "calculator" }

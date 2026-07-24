@@ -1,4 +1,4 @@
-local convert = require("imr.hub._util").convert
+local convert = require("hub._util").convert
 
 local cTianGan = {
     "甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸",

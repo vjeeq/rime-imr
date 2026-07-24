@@ -1,5 +1,5 @@
-﻿local convert = require("imr.hub._util").convert
-local digits = require("imr.hub._util").digits
+﻿local convert = require("hub._util").convert
+local digits = require("hub._util").digits
 
 local month_names_short = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" }
 local month_names_long = { "January", "February", "March", "April", "May", "June", "July", "August", "September",
