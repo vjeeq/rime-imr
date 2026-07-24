@@ -16,13 +16,6 @@
 --
 -- 默认：{ words = {"他", "她", "它"}, type = "contains" }
 
--- ── UTF-8 ──
-local function word_len(s)
-    local n = 0
-    for _ in s:gmatch("[%z\1-\127\194-\244][\128-\191]*") do n = n + 1 end
-    return n
-end
-
 -- ── Match (byte-level, supports multi-char words) ──
 local function match_word(typ, text, word)
     if typ == "contains" then
@@ -175,7 +168,7 @@ function M.func(input, env)
         if not cand then break end
 
         local hit = hit_any(groups, cand.text)
-        local l = word_len(cand.text)
+        local l = utf8.len(cand.text)
 
         if hit and l >= 2 then
             n = n + 1; buf[n] = cand
