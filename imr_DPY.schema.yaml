@@ -70,6 +70,7 @@ switches:
 engine:
   processors:
     - lua_processor@*imr.DPY_processor
+    - lua_processor@*imr.backspace_limiter
     - lua_processor@*imr.select_char*Processor
     - ascii_composer
     - recognizer
