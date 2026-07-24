@@ -96,9 +96,9 @@ engine:
     - lua_translator@*imr.select_char*Translator
     - lua_translator@*imr.gc
   filters:
+    - lua_filter@*imr.pin_filter                       # 单字置顶
     - lua_filter@*imr.tatata                        
     - lua_filter@*autocap_filter                    # 英文自动大写
-    - lua_filter@*pin_cand_filter                   # 置顶候选项（顺序要求：置顶候选项 > Emoji > 简繁切换）
     - simplifier@emoji                              # Emoji
     - simplifier@traditionalize                     # 简繁切换
     - reverse_lookup_filter@radical_reverse_lookup  # 部件拆字滤镜
@@ -245,3 +245,5 @@ tatata:
     type: ends_with     # 左模糊 ( XX的 > XX地 > XX得, 避免 XX的YY 一定 > XX地YY (可能语言模型会给出更准全的选项?) )
   - words: ['哥伦比娅', '哥伦比亚']
     type: exact         # 精准 ( 避免 '哥伦比娅大学' > '哥伦比亚大学' )
+
+pin: ['吧','呢']

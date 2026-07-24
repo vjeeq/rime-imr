@@ -58,8 +58,8 @@ engine:
     - lua_translator@*imr.select_char*Translator
     - lua_translator@*imr.gc
   filters:
+    - lua_filter@*imr.pin_filter
     - lua_filter@*imr.tatata
-    - lua_filter@*pin_cand_filter
     - simplifier@emoji # Emoji
     - simplifier@traditionalize # 简繁切换
     - reverse_lookup_filter@reverse_lookup  # 部件拆字滤镜
