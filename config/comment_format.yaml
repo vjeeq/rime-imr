@@ -1,0 +1,13 @@
+万象:
+  - xform/;[^ ]*(?= |$)//
+  - xform/(^| )ng(?= |$)/${1}eng/
+  - xform/ńg/éng/
+  - xform/ňg/ěng/
+  - xform/ǹg/èng/
+  - xform/(^| )n(?= |$)/${1}en/
+  - xform/ń/én/
+  - xform/ň/ěn/
+  - xform/ǹ/èn/
+  - xform/(^| )m(?= |$)/${1}me/
+  - xform/ḿ/mé/
+  - xform/m̀/mè/

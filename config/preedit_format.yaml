@@ -1,0 +1,164 @@
+自然码:
+  # 自然码双拼
+  - xform/(^|[ '])aa(?=<[1-6]>)/${1}a/
+  - xform/(^|[ '])ee(?=<[1-6]>)/${1}e/
+  - xform/(^|[ '])oo(?=<[1-6]>)/${1}o/
+  - xform/([bpmnljqxy])n(?=<[1-6]>)/${1}in/
+  - xform/(\w)g(?=<[1-6]>)/${1}eng/
+  - xform/(\w)q(?=<[1-6]>)/${1}iu/
+  - xform/([gkhvuirzcs])w(?=<[1-6]>)/${1}ua/
+  - xform/(\w)w(?=<[1-6]>)/${1}ia/
+  - xform/([dtnlgkhjqxyvuirzcs])r(?=<[1-6]>)/${1}uan/
+  - xform/(\w)t(?=<[1-6]>)/${1}ve/
+  - xform/([gkhvuirzcs])y(?=<[1-6]>)/${1}uai/
+  - xform/(\w)y(?=<[1-6]>)/${1}ing/
+  - xform/([dtnlgkhvuirzcs])o(?=<[1-6]>)/${1}uo/
+  - xform/(\w)p(?=<[1-6]>)/${1}un/
+  - xform/([jqx])s(?=<[1-6]>)/${1}iong/
+  - xform/(\w)s(?=<[1-6]>)/${1}ong/
+  - xform/([jqxnlb])d(?=<[1-6]>)/${1}iang/
+  - xform/(\w)d(?=<[1-6]>)/${1}uang/
+  - xform/(\w)f(?=<[1-6]>)/${1}en/
+  - xform/(\w)h(?=<[1-6]>)/${1}ang/
+  - xform/(\w)j(?=<[1-6]>)/${1}an/
+  - xform/(\w)k(?=<[1-6]>)/${1}ao/
+  - xform/(\w)l(?=<[1-6]>)/${1}ai/
+  - xform/(\w)z(?=<[1-6]>)/${1}ei/
+  - xform/(\w)x(?=<[1-6]>)/${1}ie/
+  - xform/(\w)c(?=<[1-6]>)/${1}iao/
+  - xform/([dtgkhvuirzcs])v(?=<[1-6]>)/${1}ui/
+  - xform/(\w)b(?=<[1-6]>)/${1}ou/
+  - xform/(\w)m(?=<[1-6]>)/${1}ian/
+  - xform/([aoe])\1+(\w)(?=[^ ']*<[1-6]>)/${1}${2}/
+  - xform/(^|[ '])v(?=[^ ']*<[1-6]>)/${1}zh/
+  - xform/(^|[ '])i(?=[^ ']*<[1-6]>)/${1}ch/
+  - xform/(^|[ '])u(?=[^ ']*<[1-6]>)/${1}sh/
+  - xform/([jqxy])v(?=[^ ']*<[1-6]>)/${1}u/
+  - xform/([nl])v(?=.*<[1-6]>)/${1}ü/
+  - xform/(?<=[A-Z])\s(?=[A-Z])// # 消除大写字母之间的空格
+声调:
+  - xform/a([a-z]*)<1>/ā${1}/
+  - xform/a([a-z]*)<2>/á${1}/
+  - xform/a([a-z]*)<3>/ǎ${1}/
+  - xform/a([a-z]*)<4>/à${1}/
+
+  - xform/e([a-z]*)<1>/ē${1}/
+  - xform/e([a-z]*)<2>/é${1}/
+  - xform/e([a-z]*)<3>/ě${1}/
+  - xform/e([a-z]*)<4>/è${1}/
+
+  - xform/o([a-z]*)<1>/ō${1}/
+  - xform/o([a-z]*)<2>/ó${1}/
+  - xform/o([a-z]*)<3>/ǒ${1}/
+  - xform/o([a-z]*)<4>/ò${1}/
+
+  - xform/iu<1>/iū/
+  - xform/iu<2>/iú/
+  - xform/iu<3>/iǔ/
+  - xform/iu<4>/iù/
+
+  - xform/i([a-z]*)<1>/ī${1}/
+  - xform/i([a-z]*)<2>/í${1}/
+  - xform/i([a-z]*)<3>/ǐ${1}/
+  - xform/i([a-z]*)<4>/ì${1}/
+
+  - xform/u([a-z]*)<1>/ū${1}/
+  - xform/u([a-z]*)<2>/ú${1}/
+  - xform/u([a-z]*)<3>/ǔ${1}/
+  - xform/u([a-z]*)<4>/ù${1}/
+
+  - xform/ü([a-z]*)<1>/ǖ${1}/
+  - xform/ü([a-z]*)<2>/ǘ${1}/
+  - xform/ü([a-z]*)<3>/ǚ${1}/
+  - xform/ü([a-z]*)<4>/ǜ${1}/
+
+  - xform/<1>/¹/
+  - xform/<2>/²/
+  - xform/<3>/³/
+  - xform/<4>/⁴/
+  - xform/<5>/⁰/
+  - xform/<6>//
+T93:
+  # 第三键
+  - xform/(^|[ '])([1-9])([1-9])1/${1}<${2}1><${3}1>/
+  - xform/(^|[ '])([1-9])([1-9])2/${1}<${2}1><${3}2>/
+  - xform/(^|[ '])([1-9])([1-9])3/${1}<${2}1><${3}3>/
+  - xform/(^|[ '])([1-9])([1-9])4/${1}<${2}2><${3}1>/
+  - xform/(^|[ '])([1-9])([1-9])5/${1}<${2}2><${3}2>/
+  - xform/(^|[ '])([1-9])([1-9])6/${1}<${2}2><${3}3>/
+  - xform/(^|[ '])([1-9])([1-9])7/${1}<${2}3><${3}1>/
+  - xform/(^|[ '])([1-9])([1-9])8/${1}<${2}3><${3}2>/
+  - xform/(^|[ '])([1-9])([1-9])9/${1}<${2}3><${3}3>/
+  # 九宫格数字映射
+  # |by*|kvc|qso|
+  # |fnz|pix|gte|
+  # |jml|ruw|hda|
+  - xform/<11>/b/
+  - xform/<12>/y/
+  - xform/<21>/k/
+  - xform/<22>/v/
+  - xform/<23>/c/
+  - xform/<31>/q/
+  - xform/<32>/s/
+  - xform/<33>/o/
+  - xform/<41>/f/
+  - xform/<42>/n/
+  - xform/<43>/z/
+  - xform/<51>/p/
+  - xform/<52>/i/
+  - xform/<53>/x/
+  - xform/<61>/g/
+  - xform/<62>/t/
+  - xform/<63>/e/
+  - xform/<71>/j/
+  - xform/<72>/m/
+  - xform/<73>/l/
+  - xform/<81>/r/
+  - xform/<82>/u/
+  - xform/<83>/w/
+  - xform/<91>/h/
+  - xform/<92>/d/
+  - xform/<93>/a/
+imr_T93:
+  __patch:
+    - __append:
+        - xform/a/<1>/
+        - xform/b/<2>/
+        - xform/c/<3>/
+        - xform/d/<4>/
+        - xform/e/<5>/
+        - xform/(^|[ '])([1-9])([0-9])([0-9])(?=$|[ '])/${1}${2}${3}${4}<6>/
+    - __append: { __include: T93 }
+    - __append: { __include: 自然码 }
+    - __append: { __include: 声调 }
+imr_DPY:
+  __patch:
+    - __append:
+        - xform/6/<1>/
+        - xform/7/<2>/
+        - xform/8/<3>/
+        - xform/9/<4>/
+        - xform/0/<5>/
+      # - xform/(^|[ '])([a-z]+)(?=$|[ '])/${1}${2}${3}<6>/
+    - __append: { __include: 自然码 }
+    - __append: { __include: 声调 }
+
+imr_DPY_radical_lookup:
+  __patch:
+    - __append:
+        - xform/([a-z]{2})(?=[^'])/${1}'/
+        - xform/([a-z]{2})/${1}<6>/
+    - __append: { __include: 自然码 }
+    - __append:
+        - xform/<6>//
+imr_T93_radical_lookup:
+  __patch:
+    - __append:
+        - xform/([1-9]{3})(?=[^'])/${1}'/
+        - xform/([1-9]{3})/${1}<6>/
+    - __append: { __include: T93 }
+    - __append: { __include: 自然码 }
+    - __append:
+        - xform/<6>//
+imr_T93_stroke_lookup:
+  - xlit/12345/⼀⼁⼃⼂⼄/

@@ -71,7 +71,7 @@ engine:
 
 # 处理符合特定规则的输入码，如网址、反查
 recognizer:
-  import_preset: default                # 从 default.yaml 继承通用的
+  import_preset: default                # 从 default 继承通用的
   patterns:                             # 再增加方案专有的：
     radical_lookup: "^03[0-9]+$"        # 响应部件拆字的反查，触发前缀与 radical_lookup/prefix 匹配
     stroke_lookup: '^05[0-9]+$'
@@ -82,12 +82,12 @@ translator:
   spelling_hints: none
   # 显示原始输入
   preedit_format:
-    __include: imr_config:/translator/preedit_format/imr_T93
+    __include: config/preedit_format:/imr_T93
 
 
 # 从 default 继承快捷键
 key_binder:
-  import_preset: default  # 从 default.yaml 继承通用的
+  import_preset: default  # 从 default 继承通用的
 
 punctuator:
   half_shape:
@@ -107,7 +107,7 @@ speller:
   initials: 0123456789
   delimiter: " '"  # 第一位<空格>是拼音之间的分隔符；第二位<'>表示可以手动输入单引号来分割拼音。
   algebra:
-    __include: imr_config.yaml:/speller/algebra/imr_T93
+    __include: config/algebra:/imr_T93
 
 # 反查
 radical_lookup:
@@ -119,7 +119,7 @@ radical_lookup:
   comment_format:
     - erase/^.*$//
   preedit_format:
-    __include: imr_config:/translator/preedit_format/imr_T93_radical_lookup
+    __include: config/preedit_format:/imr_T93_radical_lookup
 stroke_lookup:
   tag: stroke_lookup
   dictionary: imr_T93_stroke
@@ -129,14 +129,14 @@ stroke_lookup:
   comment_format:
     - erase/^.*$//
   preedit_format:
-    __include: imr_config:/translator/preedit_format/imr_T93_stroke_lookup
+    __include: config/preedit_format:/imr_T93_stroke_lookup
 
 # 拆字滤镜
 reverse_lookup:
   tags: [ radical_lookup, stroke_lookup ]
   dictionary: imr_cn
   comment_format:
-    __include: imr_config:/translator/comment_format/万象
+    __include: config/comment_format:/万象
 
 auxcode:
   trigger: ';'
