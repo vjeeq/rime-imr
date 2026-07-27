@@ -77,7 +77,7 @@ style:
   preedit_type: composition                # 预编辑区内容：composition（编码）； preview（选中的候选）；preview_all（全部候选）
 
   fullscreen: false                        # 候选窗口全屏显示：true；false
-  horizontal: true                         # 候选项横排：true；false
+  horizontal: false                        # 候选项横排：true；false
   vertical_text: false                     # 竖排文本：true；false
   # text_orientation: horizontal           # 文本排列方向，效果和 `vertical_text` 相同：horizontal；vertical
   vertical_text_left_to_right: false       # 竖排方向是否从左到右：true；false

@@ -13,6 +13,7 @@ user.yaml
 *.custom.yaml
 
 # IMR download
+## pinyin
 wanxiang-lts-zh-hans.gram
 imr_grammar.yaml
 etags/*
@@ -20,6 +21,10 @@ dicts/*
 downloads/*
 opencc/*
 symbols_caps_v.yaml
+## keytao
+!dicts/keytao/
+dicts/keytao/*
+!dicts/keytao/imr/
 
 # others
 ignored

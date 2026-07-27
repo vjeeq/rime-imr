@@ -4,7 +4,7 @@ const path = require('path');
 const PROJECT_ROOT = path.join(__dirname, '..');
 
 /** @type {Record<string, string>} 本地路径 → 远程下载地址 */
-const files = {
+const pinyinFiles = {
     //// 拼音拆字
     'dicts/lookup/radical_pinyin.dict.yaml': 'https://cdn.jsdelivr.net/gh/mirtlecn/rime-radical-pinyin@master/radical_pinyin.dict.yaml',
     //// 笔画
@@ -36,6 +36,28 @@ const files = {
     'lua/librime.lua': 'https://cdn.jsdelivr.net/gh/hchunhui/librime-lua@master/contrib/librime.lua',
 };
 
+/** @type {Record<string, string>} 本地路径 → 远程下载地址 */
+const keytaoFiles = {
+    'dicts/keytao/keytao.single.dict.yaml': 'https://cdn.jsdelivr.net/gh/xkinput/KeyTao@master/rime/keytao.single.dict.yaml',
+    'dicts/keytao/keytao.phrase.dict.yaml': 'https://cdn.jsdelivr.net/gh/xkinput/KeyTao@master/rime/keytao.phrase.dict.yaml',
+    'dicts/keytao/keytao.supplement.dict.yaml': 'https://cdn.jsdelivr.net/gh/xkinput/KeyTao@master/rime/keytao.supplement.dict.yaml',
+    'dicts/keytao/keytao.css.dict.yaml': 'https://cdn.jsdelivr.net/gh/xkinput/KeyTao@master/rime/keytao.css.dict.yaml',
+};
+
+const allFiles = { ...pinyinFiles, ...keytaoFiles };
+
+/**
+ * 解析命令行参数 --mode
+ * @returns {'all' | 'keytao' | 'pinyin'}
+ */
+function parseMode() {
+    const idx = process.argv.indexOf('--mode');
+    if (idx < 0) return 'all';
+    const mode = process.argv[idx + 1];
+    if (mode === 'keytao' || mode === 'pinyin') return mode;
+    return 'all';
+}
+
 // 同步远程数据
 
 /**
@@ -46,12 +68,14 @@ const checkAndUpdateFile = require(path.join(PROJECT_ROOT, 'scripts', 'utils', '
 
 /**
  * 主函数：批量同步远程文件。
+ * @param {Record<string, string>} files
  * @returns {Promise<{totalCount: number, successCount: number, hasWarn: boolean}>}
  */
-// 主函数
-async function updateFiles() {
-    console.log('开始检查并同步文件...');
-    console.log(`共配置了 ${Object.keys(files).length} 个文件\n`);
+async function updateFiles(files) {
+    const modeLabel = files === keytaoFiles ? '键道' : files === pinyinFiles ? '双拼' : '全部';
+    const fileCount = Object.keys(files).length;
+    console.log(`开始检查并同步文件... (模式: ${modeLabel})`);
+    console.log(`共配置了 ${fileCount} 个文件\n`);
 
     let successCount = 0;
     let totalCount = 0;
@@ -76,7 +100,15 @@ async function updateFiles() {
 }
 
 // 导出函数以便在其他脚本中使用
-module.exports = updateFiles;
+const downloadAll = () => updateFiles(allFiles);
+downloadAll.pinyin = () => updateFiles(pinyinFiles);
+downloadAll.keytao = () => updateFiles(keytaoFiles);
+module.exports = downloadAll;
+
 if (require.main === module) {
-    updateFiles();
+    const mode = parseMode();
+    const files = mode === 'keytao' ? keytaoFiles
+                : mode === 'pinyin' ? pinyinFiles
+                : allFiles;
+    updateFiles(files);
 }
