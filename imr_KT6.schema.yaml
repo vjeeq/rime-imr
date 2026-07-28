@@ -91,6 +91,8 @@ key_binder:
 
 recognizer:
   import_preset: default
+  patterns:
+    uppercase: "[A-Z][-_+.'0-9A-Za-z]*$"   # 解决路由
 
 
 topup:
