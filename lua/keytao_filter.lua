@@ -11,7 +11,7 @@ end
 
 local function ensure_reverse(env)
     if not env.reverse then
-        env.reverse = ReverseDb("build/keytao.extended.reverse.bin")
+        env.reverse = ReverseLookup("keytao")
     end
     return env.reverse
 end

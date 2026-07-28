@@ -11,7 +11,7 @@ const {
 const ZI_DICT = path.join(__dirname, 'dicts', 'keytao', 'keytao.single.dict.yaml');
 const PHRASE_DICT = path.join(__dirname, 'dicts', 'keytao', 'keytao.phrase.dict.yaml');
 const USER_DIR = path.join(__dirname, 'dicts', 'keytao', 'imr');
-const OUT_DICT = path.join(__dirname, 'dicts', 'keytao', 'keytao.extends.dict.yaml');
+const OUT_DICT = path.join(__dirname, 'dicts', 'keytao', 'keytao.extended.dict.yaml');
 
 function readDictFull(filePath) {
   const content = fs.readFileSync(filePath, 'utf-8');
@@ -437,7 +437,7 @@ function main() {
   }
   console.log(`  总计: ${totalEntries} 条`);
 
-  const header = phraseFull.header;
+  const header = phraseFull.header.replace('name: keytao.phrase', 'name: keytao.extended');
   const body = workingEntries.map(formatLine).join('\n') +
     '\n' +
     newEntries.map(formatLine).join('\n');

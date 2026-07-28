@@ -305,23 +305,22 @@ function getAllValidCodes(text, singleEntries) {
 
 function main() {
   const args = process.argv.slice(2);
-  if (args.length < 4 || args.length % 2 !== 0) {
-    console.error('用法: node keytao.js <汉字1> <汉字2> [<汉字3> ...] <拼音1> <拼音2> [<拼音3> ...]');
-    console.error('示例: node keytao.js 策 视 ce shi');
-    console.error('      node keytao.js 不 以 为 然 bu yi wei ran');
+  if (args.length < 2) {
+    console.error('用法: node keytao.js <词组> <拼音1> <拼音2> [<拼音3> ...]');
+    console.error('示例: node keytao.js 策视 ce shi');
+    console.error('      node keytao.js 不以为然 bu yi wei ran');
     process.exit(1);
   }
 
-  const half = args.length / 2;
-  const chars = args.slice(0, half);
-  const pinyins = args.slice(half);
+  const chars = [...args[0]];
+  const pinyins = args.slice(1);
 
-  if (chars.some(c => /^[a-z]+$/.test(c))) {
-    console.error('错误: 参数顺序应为 汉字在前，拼音在后');
+  if (chars.length !== pinyins.length) {
+    console.error(`错误: 词组 "${args[0]}" 有 ${chars.length} 字, 但提供了 ${pinyins.length} 个拼音`);
     process.exit(1);
   }
 
-  console.log(`词组: ${chars.join('')}`);
+  console.log(`词组: ${args[0]}`);
   console.log(`拼音: ${pinyins.join(' ')}`);
   console.log(`字数: ${chars.length}`);
   console.log('');
