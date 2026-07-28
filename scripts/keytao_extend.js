@@ -8,10 +8,10 @@ const {
   getAllValidCodes,
 } = require('./keytao');
 
-const ZI_DICT = path.join(__dirname, 'dicts', 'keytao', 'keytao.single.dict.yaml');
-const PHRASE_DICT = path.join(__dirname, 'dicts', 'keytao', 'keytao.phrase.dict.yaml');
-const USER_DIR = path.join(__dirname, 'dicts', 'keytao', 'imr');
-const OUT_DICT = path.join(__dirname, 'dicts', 'keytao', 'keytao.extended.dict.yaml');
+const ZI_DICT = path.join(__dirname, '..', 'dicts', 'keytao', 'keytao.single.dict.yaml');
+const PHRASE_DICT = path.join(__dirname, '..', 'dicts', 'keytao', 'keytao.phrase.dict.yaml');
+const USER_DIR = path.join(__dirname, '..', 'dicts', 'keytao', 'imr');
+const OUT_DICT = path.join(__dirname, '..', 'dicts', 'keytao', 'keytao.extended.dict.yaml');
 
 function readDictFull(filePath) {
   const content = fs.readFileSync(filePath, 'utf-8');
@@ -126,17 +126,24 @@ function printErrorSummary(errors) {
   console.log('\n请解决以上问题后重试。');
 }
 
+function copyPhraseDict(outPath) {
+  const outPhrase = readDictFull(PHRASE_DICT);
+  const outBody = outPhrase.entries.map(formatLine).join('\n');
+  fs.writeFileSync(outPath, outPhrase.header + '\n' + outBody + '\n', 'utf-8');
+}
+
 function main() {
   const opts = parseArgs();
   const errors = [];
 
   console.log('=== 步骤1: 读取用户词典 ===');
+  if (!fs.existsSync(USER_DIR)) {
+    fs.mkdirSync(USER_DIR, { recursive: true });
+  }
   const myDictFiles = fs.readdirSync(USER_DIR).filter(f => /.*\.dict\.yaml$/.test(f)).map(f => path.join(USER_DIR, f));
   if (myDictFiles.length === 0) {
     console.log('  未找到用户词典文件，直接复制官方词典');
-    const outPhrase = readDictFull(PHRASE_DICT);
-    const outBody = outPhrase.entries.map(formatLine).join('\n');
-    fs.writeFileSync(opts.outDict, outPhrase.header + '\n' + outBody + '\n', 'utf-8');
+    copyPhraseDict(opts.outDict);
     console.log(`  已写入: ${opts.outDict}`);
     process.exit(0);
   }
@@ -150,9 +157,7 @@ function main() {
   }
   if (myEntries.length === 0) {
     console.log('  无有效用户条目，直接复制官方词典');
-    const outPhrase = readDictFull(PHRASE_DICT);
-    const outBody = outPhrase.entries.map(formatLine).join('\n');
-    fs.writeFileSync(opts.outDict, outPhrase.header + '\n' + outBody + '\n', 'utf-8');
+    copyPhraseDict(opts.outDict);
     console.log(`  已写入: ${opts.outDict}`);
     process.exit(0);
   }
@@ -261,7 +266,7 @@ function main() {
   const entries1000 = myEntries.filter(e => e.weight === 1000);
 
   for (const me of entries1000) {
-    let workCodeSet = new Set(workingEntries.map(e => e.code));
+    const workCodeSet = new Set(workingEntries.map(e => e.code));
 
     if (!workCodeSet.has(me.code)) continue;
 
@@ -446,4 +451,8 @@ function main() {
   console.log(`  已写入: ${opts.outDict}`);
 }
 
-main();
+module.exports = main;
+
+if (require.main === module) {
+  main();
+}

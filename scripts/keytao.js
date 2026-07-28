@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const BASE_DIR = path.join(__dirname, 'ignored', '键道', 'keytao-windows');
+const BASE_DIR = path.join(__dirname, '..', 'dicts', 'keytao');
 const SINGLE_DICT = path.join(BASE_DIR, 'keytao.single.dict.yaml');
 const PHRASE_DICT = path.join(BASE_DIR, 'keytao.phrase.dict.yaml');
 
