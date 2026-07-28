@@ -6,6 +6,7 @@ const {
   buildPhraseLookup,
   checkPhrase,
   getAllValidCodes,
+  pinyinToShuangpin,
 } = require('./keytao');
 
 const ZI_DICT = path.join(__dirname, '..', 'dicts', 'keytao', 'keytao.single.dict.yaml');
@@ -43,7 +44,7 @@ function readDictFull(filePath) {
   return { header, entries };
 }
 
-function parseMyDict(filePath) {
+function parseMyDict(filePath, warnings, errors) {
   const content = fs.readFileSync(filePath, 'utf-8');
   const lines = content.split('\n');
   const entries = [];
@@ -61,14 +62,14 @@ function parseMyDict(filePath) {
 
     const parts = line.split('\t');
     if (parts.length < 3) {
-      console.error(`警告: ${fileName}:${lineno + 1} 格式不正确 (缺字段), 跳过`);
+      errors.push({ summary: `${fileName}:${lineno + 1} 格式不正确 (缺字段)` });
       continue;
     }
 
     const text = parts[0].trim();
     const tokens = parts[1].trim().split(/\s+/);
     if (tokens.length < 2) {
-      console.error(`警告: ${fileName}:${lineno + 1} "${text}" 的第二列格式不正确, 跳过`);
+      errors.push({ summary: `${fileName}:${lineno + 1} "${text}" 的第二列格式不正确` });
       continue;
     }
 
@@ -76,17 +77,23 @@ function parseMyDict(filePath) {
     const pinyins = tokens.slice(0, -1);
     const weight = parseInt(parts[2].trim(), 10);
 
+    if (weight === 0) {
+      const chars = [...text];
+      entries.push({ text, chars, pinyins: chars.map(() => ''), code, weight: 0, file: fileName, line: lineno + 1 });
+      continue;
+    }
+
     if (weight !== 100 && weight !== 1000) {
-      console.error(`警告: ${fileName}:${lineno + 1} "${text}" 权重不是100或1000, 跳过`);
+      errors.push({ summary: `${fileName}:${lineno + 1} "${text}" 权重不是0/100/1000` });
       continue;
     }
 
     const chars = [...text];
 
     if (pinyins.length !== chars.length) {
-      console.error(
-        `警告: ${fileName}:${lineno + 1} "${text}" 拼音数量(${pinyins.length})与字数(${chars.length})不匹配, 跳过`
-      );
+      errors.push({
+        summary: `${fileName}:${lineno + 1} "${text}" 拼音数量(${pinyins.length})与字数(${chars.length})不匹配`,
+      });
       continue;
     }
 
@@ -100,6 +107,20 @@ function formatLine(entry) {
   return `${entry.text}\t${entry.code}\t${entry.weight}`;
 }
 
+function getSpPos(charIdx, wordLen) {
+  if (wordLen === 2) return charIdx * 2;
+  if (charIdx < 3) return charIdx;
+  return 3;
+}
+
+function variantUsedInCodes(codes, charIdx, wordLen, variant) {
+  const pos = getSpPos(charIdx, wordLen);
+  if (wordLen === 2) {
+    return codes.some(c => c.length > pos + 1 && c.slice(pos, pos + 2) === variant);
+  }
+  return codes.some(c => c.length > pos && c[pos] === variant[0]);
+}
+
 function parseArgs() {
   const args = process.argv.slice(2);
   const opts = { outDict: OUT_DICT };
@@ -111,19 +132,26 @@ function parseArgs() {
   return opts;
 }
 
-function printErrorSummary(errors) {
-  if (errors.length === 0) return;
-  console.log('\n' + '='.repeat(50));
-  console.log('  错误/冲突汇总');
-  console.log('='.repeat(50));
-  for (let i = 0; i < errors.length; i++) {
-    const err = errors[i];
-    console.log(`\n[${i + 1}] ${err.summary}`);
-    if (err.detail) {
-      console.log(`    ${err.detail}`);
+function printSummary(warnings, errors) {
+  if (warnings.length > 0) {
+    console.log('\n--- 警告 ---');
+    for (const w of warnings) {
+      console.log(`  ${w}`);
     }
   }
-  console.log('\n请解决以上问题后重试。');
+  if (errors.length > 0) {
+    console.log('\n' + '='.repeat(50));
+    console.log('  错误/冲突汇总');
+    console.log('='.repeat(50));
+    for (let i = 0; i < errors.length; i++) {
+      const err = errors[i];
+      console.log(`\n[${i + 1}] ${err.summary}`);
+      if (err.detail) {
+        console.log(`    ${err.detail}`);
+      }
+    }
+    console.log('\n请解决以上问题后重试。');
+  }
 }
 
 function copyPhraseDict(outPath) {
@@ -135,6 +163,7 @@ function copyPhraseDict(outPath) {
 function main() {
   const opts = parseArgs();
   const errors = [];
+  const warnings = [];
 
   console.log('=== 步骤1: 读取用户词典 ===');
   if (!fs.existsSync(USER_DIR)) {
@@ -151,9 +180,15 @@ function main() {
   console.log(`  文件: ${myDictFiles.length} 个`);
   const myEntries = [];
   for (const f of myDictFiles) {
-    const entries = parseMyDict(f);
+    const entries = parseMyDict(f, warnings, errors);
     myEntries.push(...entries);
     console.log(`    ${path.basename(f)} (${entries.length} 条)`);
+  }
+  if (errors.length > 0) {
+    console.log(`  格式错误: ${errors.length} 条`);
+    printSummary(warnings, errors);
+    console.log('用户词典格式错误，终止。');
+    process.exit(1);
   }
   if (myEntries.length === 0) {
     console.log('  无有效用户条目，直接复制官方词典');
@@ -163,7 +198,11 @@ function main() {
   }
   console.log(`  有效条目总计: ${myEntries.length}`);
   for (const e of myEntries) {
-    console.log(`  [${e.weight === 1000 ? '新增' : '修改'}] ${e.text} (${e.code})`);
+    if (e.weight === 0) {
+      console.log(`  [删除] ${e.text} (${e.code})`);
+    } else {
+      console.log(`  [${e.weight === 1000 ? '新增' : '修改'}] ${e.text} (${e.code})`);
+    }
   }
 
   console.log('\n=== 步骤2: 加载官方词典 ===');
@@ -176,6 +215,7 @@ function main() {
   console.log('\n=== 步骤3: 校验编码合法性 ===');
   let hasError = false;
   for (const e of myEntries) {
+    if (e.weight === 0) continue;
     try {
       const result = checkPhrase(e.chars, e.pinyins, dicts);
       if (!result.codes.includes(e.code)) {
@@ -196,8 +236,42 @@ function main() {
       }
     }
   }
+
+  const codesByText = new Map();
+  for (const e of myEntries) {
+    if (e.weight === 0) continue;
+    if (!codesByText.has(e.text)) codesByText.set(e.text, []);
+    codesByText.get(e.text).push(e.code);
+  }
+
+  for (const e of myEntries) {
+    if (e.weight === 0) continue;
+    const myCodes = codesByText.get(e.text) || [];
+    for (let i = 0; i < e.chars.length; i++) {
+      const variants = pinyinToShuangpin(e.pinyins[i]);
+      if (variants.length <= 1) continue;
+      const uncovered = variants.filter(v => !variantUsedInCodes(myCodes, i, e.chars.length, v));
+      if (uncovered.length > 0) {
+        warnings.push(`[提示] ${e.file}:${e.line} "${e.text}" 第${i + 1}字 "${e.chars[i]}" (${e.pinyins[i]}) 双拼变体: ${variants.join(', ')} (未覆盖: ${uncovered.join(', ')})`);
+      }
+    }
+  }
+
+  const codeCount = new Map();
+  for (const e of myEntries) {
+    if (e.weight === 0) continue;
+    if (!codeCount.has(e.code)) codeCount.set(e.code, []);
+    codeCount.get(e.code).push(e);
+  }
+  for (const [code, entries] of codeCount) {
+    if (entries.length > 1) {
+      const names = entries.map(e => `"${e.text}"(${e.file}:${e.line})`).join(', ');
+      warnings.push(`编码 "${code}" 在用户词典中重复: ${names}`);
+    }
+  }
+
   if (hasError) {
-    printErrorSummary(errors);
+    printSummary(warnings, errors);
     console.log('编码校验未通过，终止。');
     process.exit(1);
   }
@@ -215,7 +289,7 @@ function main() {
     }
   }
   if (hasError) {
-    printErrorSummary(errors);
+    printSummary(warnings, errors);
     console.log('终止。');
     process.exit(1);
   }
@@ -250,20 +324,33 @@ function main() {
     console.log('  (无需删除)');
   }
 
+  const remove0Entries = myEntries.filter(e => e.weight === 0);
+  if (remove0Entries.length > 0) {
+    console.log('  删除的旧条目 (权重0):');
+    for (const e of remove0Entries) {
+      for (let i = workingEntries.length - 1; i >= 0; i--) {
+        if (workingEntries[i].text === e.text && workingEntries[i].code === e.code) {
+          console.log(`    ${workingEntries[i].text}\t${workingEntries[i].code}\t${workingEntries[i].weight}`);
+          workingEntries.splice(i, 1);
+        }
+      }
+    }
+  }
+
   console.log('\n=== 步骤6: 自动推导100-weight (解决1000条目冲突) ===');
   const auto100 = [];
   const implicitRemoved = [];
   let cannotResolve = false;
 
-  function occupiedCodes() {
-    const s = new Set();
-    for (const e of workingEntries) s.add(e.code);
-    for (const a of auto100) s.add(a.code);
-    for (const me of myEntries) s.add(me.code);
-    return s;
-  }
-
   const entries1000 = myEntries.filter(e => e.weight === 1000);
+  const codes1000Set = new Set(entries1000.map(e => e.code));
+
+  for (let i = workingEntries.length - 1; i >= 0; i--) {
+    if (texts1000.has(workingEntries[i].text)) {
+      implicitRemoved.push(workingEntries[i]);
+      workingEntries.splice(i, 1);
+    }
+  }
 
   for (const me of entries1000) {
     const workCodeSet = new Set(workingEntries.map(e => e.code));
@@ -276,6 +363,11 @@ function main() {
     console.log(`  1000条目 "${me.text}" (${me.code}) 冲突 -> ${uniqueTexts.map(t => `"${t}"`).join(', ')}`);
 
     for (const conflictText of uniqueTexts) {
+      if (texts1000.has(conflictText)) {
+        console.log(`    -> "${conflictText}" 已有1000条目, 跳过自动推导`);
+        continue;
+      }
+
       const allCodes = getAllValidCodes(conflictText, singleEntries);
       if (allCodes.length === 0) {
         const msg = `"${conflictText}" 在单字字典中无匹配条目 (因 "${me.text}" 冲突)`;
@@ -298,41 +390,47 @@ function main() {
       }
 
       let resolved = false;
+      const blockedBy = [];
       for (const cand of candidates) {
-        const occ = occupiedCodes();
-        if (!occ.has(cand)) {
-          auto100.push({
-            text: conflictText,
-            code: cand,
-            weight: '100',
-            cause: me.text,
-          });
-          console.log(`    -> "${conflictText}" 自动改为 ${cand}`);
-          resolved = true;
-          break;
-        }
-
-        const occupiers = [...new Set(
+        const unresolvable = [...new Set(
           phraseFull.entries
             .filter(e => e.code === cand)
+            .filter(e => !codes1000Set.has(e.code))
+            .filter(e => !texts1000.has(e.text))
             .map(e => e.text)
         )];
 
-        if (occupiers.length === 1 && occupiers[0] === conflictText) {
+        if (unresolvable.length > 0) {
+          if (unresolvable.length === 1 && unresolvable[0] === conflictText) {
+            continue;
+          }
+          blockedBy.push({ cand, occupier: unresolvable.join(', ') });
           continue;
         }
 
-        const errMsg = `候选编码 "${cand}" 在官方词典中被 "${occupiers.join(', ')}" 占用, 无法自动解决`;
-        console.error(`    [错误] ${errMsg}`);
-        errors.push({ summary: errMsg, detail: `因 "${me.text}" 冲突, 尝试将 "${conflictText}" 改为 ${cand}` });
-        cannotResolve = true;
+        auto100.push({
+          text: conflictText,
+          code: cand,
+          weight: '100',
+          cause: me.text,
+        });
+        console.log(`    -> "${conflictText}" 自动改为 ${cand}`);
+        resolved = true;
         break;
       }
 
-      if (!resolved && !cannotResolve) {
-        const msg = `"${conflictText}" 所有候选编码 (${candidates.join(', ')}) 均被占用 (因 "${me.text}" 冲突)`;
-        console.error(`    [错误] ${msg}`);
-        errors.push({ summary: msg, detail: `冲突编码: ${me.code}` });
+      if (!resolved) {
+        if (blockedBy.length > 0) {
+          for (const b of blockedBy) {
+            const errMsg = `候选编码 "${b.cand}" 在官方词典中被 "${b.occupier}" 占用, 无法自动解决`;
+            console.error(`    [错误] ${errMsg}`);
+            errors.push({ summary: errMsg, detail: `因 "${me.text}" 冲突, 尝试将 "${conflictText}" 改为 ${b.cand}` });
+          }
+        } else {
+          const msg = `"${conflictText}" 所有候选编码 (${candidates.join(', ')}) 均被占用 (因 "${me.text}" 冲突)`;
+          console.error(`    [错误] ${msg}`);
+          errors.push({ summary: msg, detail: `冲突编码: ${me.code}` });
+        }
         cannotResolve = true;
       }
     }
@@ -365,7 +463,7 @@ function main() {
   }
 
   if (cannotResolve) {
-    printErrorSummary(errors);
+    printSummary(warnings, errors);
     console.log('存在无法自动解决的冲突，终止。请手动添加100-weight条目。');
     process.exit(1);
   }
@@ -375,6 +473,7 @@ function main() {
   const plannedEntries = new Map();
 
   for (const me of myEntries) {
+    if (me.weight === 0) continue;
     const key = `${me.text}\t${me.code}`;
     if (finalCodeSet.has(me.code)) {
       const existing = workingEntries.filter(e => e.code === me.code);
@@ -420,7 +519,7 @@ function main() {
   }
 
   if (hasError) {
-    printErrorSummary(errors);
+    printSummary(warnings, errors);
     console.log('存在冲突，不生成输出文件。请手动解决。');
     process.exit(1);
   }
@@ -449,6 +548,8 @@ function main() {
 
   fs.writeFileSync(opts.outDict, header + '\n' + body + '\n', 'utf-8');
   console.log(`  已写入: ${opts.outDict}`);
+
+  printSummary(warnings, errors);
 }
 
 module.exports = main;

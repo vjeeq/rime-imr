@@ -50,7 +50,7 @@ function resolveInitials(pinyin) {
   }
 
   if (initialPart === '') {
-    initials.push({ key: 'x', final: finalPart });
+    initials.push({ key: 'x', final: finalPart, initial: initialPart });
     return initials;
   }
 
@@ -60,16 +60,15 @@ function resolveInitials(pinyin) {
     const innerOk = ZH_FINALS_INNER.has(fin);
     const bothOk  = ZH_FINALS_BOTH.has(fin);
 
-    if (outerOk && innerOk) {
-      initials.push({ key: 'f', final: fin });
-      initials.push({ key: 'q', final: fin });
-    } else if (outerOk) {
-      initials.push({ key: 'q', final: fin });
-    } else if (innerOk) {
-      initials.push({ key: 'f', final: fin });
-    } else if (bothOk) {
-      initials.push({ key: 'f', final: fin });
-      initials.push({ key: 'q', final: fin });
+    if (outerOk) {
+      initials.push({ key: 'q', final: fin, initial: initialPart });
+    }
+    if (innerOk) {
+      initials.push({ key: 'f', final: fin, initial: initialPart });
+    }
+    if (bothOk) {
+      if (!outerOk) initials.push({ key: 'q', final: fin, initial: initialPart });
+      if (!innerOk) initials.push({ key: 'f', final: fin, initial: initialPart });
     }
     return initials;
   }
@@ -80,21 +79,20 @@ function resolveInitials(pinyin) {
     const innerOk = CH_FINALS_INNER.has(fin);
     const bothOk  = CH_FINALS_BOTH.has(fin);
 
-    if (outerOk && innerOk) {
-      initials.push({ key: 'j', final: fin });
-      initials.push({ key: 'w', final: fin });
-    } else if (outerOk) {
-      initials.push({ key: 'j', final: fin });
-    } else if (innerOk) {
-      initials.push({ key: 'w', final: fin });
-    } else if (bothOk) {
-      initials.push({ key: 'j', final: fin });
-      initials.push({ key: 'w', final: fin });
+    if (outerOk) {
+      initials.push({ key: 'j', final: fin, initial: initialPart });
+    }
+    if (innerOk) {
+      initials.push({ key: 'w', final: fin, initial: initialPart });
+    }
+    if (bothOk) {
+      if (!outerOk) initials.push({ key: 'j', final: fin, initial: initialPart });
+      if (!innerOk) initials.push({ key: 'w', final: fin, initial: initialPart });
     }
     return initials;
   }
 
-  initials.push({ key: INITIAL_MAP[initialPart] || initialPart, final: finalPart });
+  initials.push({ key: INITIAL_MAP[initialPart] || initialPart, final: finalPart, initial: initialPart });
   return initials;
 }
 
@@ -104,6 +102,9 @@ function pinyinToShuangpin(pinyin) {
 
   for (const opt of initialOptions) {
     let finalKey = FINAL_MAP[opt.final];
+    if (['j', 'q', 'x', 'y'].includes(opt.initial) && opt.final === 'u') {
+      finalKey = 'l';
+    }
     if (finalKey === undefined) {
       finalKey = opt.final;
     }
