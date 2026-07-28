@@ -2,37 +2,9 @@
 # encoding: utf-8
 
 schema:
-  schema_id: keytao
-  name: 键道6
-  version: "2.2"
-
-
-# Layout config
-layout:
-  topup:
-    topup_this: "bcdefghjklmnpqrstwxyz"
-    topup_with: "avuio;"
-
-  algebra:
-    - derive/^[bcdefghjklmnpqrstwxyz;]([bcdefghjklmnpqrstwxyz;][avuio].*)$/`$1/
-    - derive/^([bcdefghjklmnpqrstwxyz;])[bcdefghjklmnpqrstwxyz;]([avuio].*)$/$1`$2/
-    - derive/^([bcdefghjklmnpqrstwxyz;`]{2})[avuio](.*)$/$1`$2/
-    - derive/^([bcdefghjklmnpqrstwxyz;`]{2}[avuio`]).(.*)$/$1`$2/
-    - derive/^([bcdefghjklmnpqrstwxyz;`]{2}[avuio`]{2}).(.*)$/$1`$2/
-    - derive/^([bcdefghjklmnpqrstwxyz;`]{2}[avuio`]{3}).(.*)$/$1`$2/
-    - derive/^([bcdefghjklmnpqrstwxyz;`]{2}[avuio`]{4}).(.*)$/$1`$2/
-    - derive/^([bcdefghjklmnpqrstwxyz;`]{2}[avuio`]{5}).$/$1`/
-    - derive/^[bcdefghjklmnpqrstwxyz;]{2}([avuio`]*)$/``$1/
-
-  # input_code:
-  #   date: orq
-  #   time: ouj
-  #   week: oxq
-
-  patterns:
-    special: "^(?:;?[avuio])[a-z]{0,}"
-    # input_code: "^(?:orq?|ouj?|oxq?)"
-
+  schema_id: imr_KT6
+  name: IME-键道6
+  version: "alpha"
 
 switches:
   - name: ascii_mode
@@ -93,16 +65,14 @@ engine:
 
 
 speller:
-  algebra:
-    __include: "layout/algebra"
   auto_select: false
   auto_select_unique_candidate: false
-  alphabet: "abcdefghijklmnopqrstuvwxyz;"
-  initials: "abcdefghijklmnopqrstuvwxyz;"
+  alphabet: "abcdefghijklmnopqrstuvwxyz"
+  initials: "abcdefghijklmnopqrstuvwxyz"
 
 
 translator:
-  dictionary: keytao
+  dictionary: imr_KT6
   enable_charset_filter: false
   enable_completion: true
   enable_encoder: true
@@ -124,7 +94,8 @@ recognizer:
 
 
 topup:
-  __include: "layout/topup"
+  topup_this: bcdefghjklmnpqrstwxyz
+  topup_with: avuio
   min_length: 4
   max_length: 6
   auto_clear: true
