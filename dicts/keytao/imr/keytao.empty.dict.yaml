@@ -5,6 +5,11 @@
 name: keytao.empty
 version: "zzz"
 sort: original
+columns:
+  - text
+  - stem
+  - code
+  - weight
 ...
 # 示例
 # <中文><Tab><拼音1><空格><拼音2><空格>...<空格><拼音N><Tab><编码><Tab><1000/100>

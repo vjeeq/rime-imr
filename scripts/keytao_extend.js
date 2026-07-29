@@ -61,21 +61,20 @@ function parseMyDict(filePath, warnings, errors) {
     if (trimmed === '' || trimmed.startsWith('#')) continue;
 
     const parts = line.split('\t');
-    if (parts.length < 3) {
-      errors.push({ summary: `${fileName}:${lineno + 1} 格式不正确 (缺字段)` });
+    if (parts.length < 4) {
+      errors.push({ summary: `${fileName}:${lineno + 1} 格式不正确 (缺字段, 需4列)` });
       continue;
     }
 
     const text = parts[0].trim();
-    const tokens = parts[1].trim().split(/\s+/);
-    if (tokens.length < 2) {
-      errors.push({ summary: `${fileName}:${lineno + 1} "${text}" 的第二列格式不正确` });
+    const pinyins = parts[1].trim().split(/\s+/);
+    const code = parts[2].trim();
+    const weight = parseInt(parts[3].trim(), 10);
+
+    if (pinyins.length < 1 || pinyins[0] === '') {
+      errors.push({ summary: `${fileName}:${lineno + 1} "${text}" stem 列为空` });
       continue;
     }
-
-    const code = tokens[tokens.length - 1];
-    const pinyins = tokens.slice(0, -1);
-    const weight = parseInt(parts[2].trim(), 10);
 
     if (weight === 0) {
       const chars = [...text];
