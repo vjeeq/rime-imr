@@ -471,6 +471,19 @@ function main() {
   console.log('\n=== 步骤7: 最终冲突检查 ===');
   const finalCodeSet = new Set(workingEntries.map(e => e.code));
   const plannedEntries = new Map();
+  const codeToText = new Map();
+
+  for (const me of myEntries) {
+    if (me.weight === 0) continue;
+    const prev = codeToText.get(me.code);
+    if (prev !== undefined && prev !== me.text) {
+      const msg = `编码 "${me.code}" 被 "${me.text}"(${me.file}:${me.line}) 与 "${prev}" 重复使用`;
+      console.error(`  [冲突] ${msg}`);
+      errors.push({ summary: msg });
+      hasError = true;
+    }
+    codeToText.set(me.code, me.text);
+  }
 
   for (const me of myEntries) {
     if (me.weight === 0) continue;
@@ -487,7 +500,10 @@ function main() {
       hasError = true;
     }
     if (plannedEntries.has(key)) {
-      const msg = `"${me.code}" (${me.text}) 在用户词典中重复出现`;
+      if (plannedEntries.get(key).weight === (me.weight === 1000 ? '1000' : '100')) {
+        continue;
+      }
+      const msg = `"${me.code}" (${me.text}) 在用户词典中重复出现但权重不一致`;
       console.error(`  [冲突] ${msg}`);
       errors.push({ summary: msg });
       hasError = true;

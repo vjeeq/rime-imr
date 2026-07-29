@@ -1,0 +1,140 @@
+# coding: utf-8
+# 键道6用户词库
+# 该文件以UTF-8编码保存
+---
+name: keytao.hsr
+version: "4.4"
+sort: original
+...
+崩坏星穹铁道	beng huai xing qiong tie dao bhxdi	100
+崩坏	beng huai brhg	100
+星穹铁道	xing qiong tie dao xqtdo	100
+星穹	xing qiong xgqy	1000
+星魂	xing hun xghw	100
+命座	ming zuo mgzl	1000
+专武	zhuan wu ftwj	1000
+
+命途	ming tu mgtj	100
+毁灭	hui mie hbmd	100
+巡猎	xun lie xwld	1000
+# 智识	zhi shi fkekuo	100
+同谐	tong xie tyxd	1000
+虚无	xu wu xlwj	100
+存护	cun hu cwhj	1000
+丰饶	feng rao frrz	100
+记忆	ji yi jkyk	100
+欢愉	huan yu htyl	100
+
+# 0.X
+姬子	ji zi jkzka	100
+瓦尔特	wa er te wxtv	100
+布洛妮娅	bu luo ni ya blnyv	100
+克拉拉	ke la la kllu	100
+杰帕德	jie pa de jpdvi	100
+白露	bai lu bhlj	100
+彦卿	yan qing yfqgou	100
+三月七	san yue qi syqv	100
+丹恒	dan heng dfhr	100
+黑塔	hei ta hwts	100
+艾斯妲	ai si da xsdi	1000
+阿兰	a lan xslf	100
+娜塔莎	na ta sha ntea	100
+虎克	hu ke hjke	1000
+佩拉	pei la pwls	100
+希露瓦	xi lu wa xlwu	100
+桑博	sang bo spbl	100
+青雀	qing que qgqh	100
+停云	ting yun tgywi	100
+素裳	su shang sjep	1000
+# 1.0
+希儿	xi er xkxj	1000
+# 景元	jing yuan jgytov	1000
+# 1.1
+银狼	yin lang yblp	1000
+罗刹	luo cha llwsiu	100
+驭空	yu kong ylky	1000
+# 1.2
+# 刃
+卡芙卡	ka fu ka kfk	1000
+卢卡	lu ka ljksi	100
+# 1.3
+丹恒饮月	dan heng yin yue dhyyuo	100
+符玄	fu xuan fjxtu	100
+玲可	ling ke lgkev	100
+# 1.4
+静流	jing liu jglqv	100
+托帕	tuo pa tlps	100
+桂乃芬	gui nai fen gnfv	100
+# 1.5
+藿藿	huo huo hlhli	100
+银枝	yin zhi ybfkiv	100
+寒鸦	han ya hfyso	100
+# 1.6
+阮梅	ruan mei rtmwa	100
+雪衣	xue yi xhykv	100
+真理医生	zhen li yi sheng qlye	100
+# 2.0
+黑天鹅	hei tian e htxiv	100
+米沙	mi sha mkes	100
+花火	hua huo hqhl	1000
+# 2.1
+黄泉	huang quan hxqt	100
+黄泉	huang quan hmqt	100
+砂金	sha jin esjbv	100
+# 2.2
+知更鸟	zhi geng niao fgnu	100
+波提欧	bo ti ou btxa	100
+# 2.3
+流荧	liu ying lqyga	100
+加拉赫	jia la he jlhai	100
+翡翠	fei cui fwcb	100
+# 2.4
+云璃	yun li ywlkv	100
+椒丘	jiao qiu jcqqv	100
+# 2.5
+飞霄	fei xiao fwxc	1000
+貘泽	mo ze mlze	100
+灵砂	ling sha lges	100
+# 2.6
+乱破	luan po ltpl	100
+# 2.7
+星期日	xing qi ri xqr	100
+忘归人	wang gui ren wgro	100
+# 3.0
+大黑塔	da hei ta dhtviv	100
+阿格莱雅	a ge lai ya xglya	100
+# 3.1
+缇宝	ti bao tkbza	100
+万敌	wan di wfdkv	1000
+# 3.2
+遐蝶	xia die xsddai	100
+那刻夏	na ke xia nkxa	100
+# 3.3
+风堇	feng jin frjbu	100
+赛飞儿	sai fei er sfxo	100
+# 3.4
+白厄	bai e bhxeuv	100
+# 3.5
+海瑟音	hai se yin hsya	100
+刻律德菈	ke lv de la kldl	100
+# 3.6
+长夜月	chang ye yue jyyu	100
+丹恒腾荒	dan heng teng huang dhth	100
+# 3.7
+昔涟	xi lian xklmv	100
+# 3.8
+大丽花	da li hua dlhv	100
+# 4.0
+爻光	yao guang yzgx	1000
+爻光	yao guang yzgm	1000
+火花	huo hua hlhq	100
+# 4.1
+不死途	bu si tu bst	100
+# 4.2
+# 银狼Lv999
+狼尊	lang zun lpzw	100
+绯英	fei ying fwyga	100
+# 4.3
+千冶刃	qian ye ren qyr	100
+# 4.4
+姬子启行	ji zi qi xing jzqxa	100

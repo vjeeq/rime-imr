@@ -12,7 +12,7 @@ const INITIAL_MAP = {
   j: 'j', q: 'q', x: 'x',
   r: 'r', z: 'z', c: 'c', s: 's',
   y: 'y', w: 'w',
-  zh: 'f', ch: 'j', sh: 'e',
+  sh: 'e',
 };
 
 const ZH_FINALS_OUTER = new Set(['an', 'ang', 'ei', 'en', 'eng', 'u', 'un']);
@@ -67,8 +67,8 @@ function resolveInitials(pinyin) {
       initials.push({ key: 'f', final: fin, initial: initialPart });
     }
     if (bothOk) {
-      if (!outerOk) initials.push({ key: 'q', final: fin, initial: initialPart });
-      if (!innerOk) initials.push({ key: 'f', final: fin, initial: initialPart });
+      initials.push({ key: 'q', final: fin, initial: initialPart });
+      initials.push({ key: 'f', final: fin, initial: initialPart });
     }
     return initials;
   }
@@ -86,8 +86,8 @@ function resolveInitials(pinyin) {
       initials.push({ key: 'w', final: fin, initial: initialPart });
     }
     if (bothOk) {
-      if (!outerOk) initials.push({ key: 'j', final: fin, initial: initialPart });
-      if (!innerOk) initials.push({ key: 'w', final: fin, initial: initialPart });
+      initials.push({ key: 'j', final: fin, initial: initialPart });
+      initials.push({ key: 'w', final: fin, initial: initialPart });
     }
     return initials;
   }

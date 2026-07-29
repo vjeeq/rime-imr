@@ -3,7 +3,7 @@
 # 该文件以UTF-8编码保存
 ---
 name: keytao.ys
-version: "4.8"
+version: "月之八"
 sort: original
 ...
 原神	yuan shen yten	1000
@@ -91,6 +91,7 @@ sort: original
 九条裟罗	jiu tiao sha luo jtelu	100
 珊瑚宫心海	shan hu gong xin hai ehgh	100
 # 2.2
+埃洛伊	ai luo yi xlyva	100
 托马	tuo ma tlmsi	1000
 # 2.3
 荒龙一斗	huang long yi dou hlydi	100
@@ -160,3 +161,53 @@ sort: original
 希格雯	xi ge wen xgwu	100
 # 4.8
 艾梅莉埃	ai mei li ai xmlxiv	100
+# 5.0
+玛拉妮	ma la ni mlnv	100
+卡齐娜	ka qi na kqn	100
+基尼奇	ji ni qi jnqv	100
+# 5.1
+希诺宁	xi nuo ning xnnu	100
+# 5.2
+恰斯卡	qia si ka qsko	100
+欧洛伦	ou luo lun xllv	1000
+# 5.3
+玛薇卡	ma wei ka mwk	100
+茜特菈莉	xi te la li xtlli	100
+蓝砚	lan yan lfyf	1000
+# 5.4
+梦见月瑞希	meng jian yue rui xi mjyx	100
+# 5.5
+瓦雷莎	wa lei sha wlev	100
+伊安珊	yi an shan yxeio	100
+# 5.6
+爱可菲	ai ke fei xkfu	100
+伊法	yi fa ykfsia	100
+亿发	yi fa ykfsia	0
+# 5.7
+丝柯克	si ke ke skk	1000
+塔利雅	ta li ya tlyv	100
+# 5.8
+伊涅芙	yi nie fu ynfi	100
+# 月之一
+菈乌玛	la wu ma lwmi	100
+菲林斯	fei lin si flsi	100
+爱诺	ai nuo xhnlu	100
+# 月之二
+奈芙尔	nai fu er nfxv	100
+# 月之三
+杜林	du lin djlb	100
+雅柯达	ya ke da ykdv	100
+# 月之四
+哥伦比娅	ge lun bi ya glby	1000
+兹白	zi bai zkbho	100
+叶洛亚	ye luo ya ylyoav	100
+# 月之五
+法尔伽	fa er jia fxjaui	100
+# 月之六
+莉奈娅	li nai ya lny	100
+# 月之七
+尼可	ni ke nkkea	1000
+布伦妮	bu lun ni blnvi	100
+洛恩	luo en llxn	100
+# 月之八
+桑多涅	sang duo nie sdn	100
