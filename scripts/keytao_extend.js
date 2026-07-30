@@ -4,6 +4,7 @@ const path = require('path');
 const {
   parseDict,
   buildPhraseLookup,
+  buildSingleIndex,
   checkPhrase,
   getAllValidCodes,
   pinyinToShuangpin,
@@ -209,7 +210,8 @@ function main() {
   console.log(`  词组词典条目: ${phraseFull.entries.length}`);
 
   const singleEntries = parseDict(ZI_DICT);
-  const dicts = { singleEntries, phraseLookup: buildPhraseLookup(phraseFull.entries) };
+  const singleIndex = buildSingleIndex(singleEntries);
+  const dicts = { singleEntries, phraseLookup: buildPhraseLookup(phraseFull.entries), index: singleIndex };
 
   console.log('\n=== 步骤3: 校验编码合法性 ===');
   let hasError = false;
@@ -300,14 +302,7 @@ function main() {
   const removed = [];
 
   for (const entry of phraseFull.entries) {
-    let shouldRemove = false;
-    for (const me of myEntries) {
-      if (me.weight === 100 && entry.text === me.text && allUserCodeSet.has(entry.code)) {
-        shouldRemove = true;
-        break;
-      }
-    }
-    if (shouldRemove) {
+    if (texts100.has(entry.text) && allUserCodeSet.has(entry.code)) {
       removed.push(entry);
     } else {
       workingEntries.push(entry);
@@ -351,7 +346,9 @@ function main() {
     }
   }
 
+  let processed = 0;
   for (const me of entries1000) {
+    processed++;
     const workCodeSet = new Set(workingEntries.map(e => e.code));
 
     if (!workCodeSet.has(me.code)) continue;
@@ -359,7 +356,7 @@ function main() {
     const conflictedOldEntries = workingEntries.filter(e => e.code === me.code);
     const uniqueTexts = [...new Set(conflictedOldEntries.map(e => e.text))];
 
-    console.log(`  1000条目 "${me.text}" (${me.code}) 冲突 -> ${uniqueTexts.map(t => `"${t}"`).join(', ')}`);
+    console.log(`  1000条目 "${me.text}" (${me.code}) 冲突 -> ${uniqueTexts.map(t => `"${t}"`).join(', ')} (${processed}/${entries1000.length})`);
 
     for (const conflictText of uniqueTexts) {
       if (texts1000.has(conflictText)) {
@@ -367,7 +364,7 @@ function main() {
         continue;
       }
 
-      const allCodes = getAllValidCodes(conflictText, singleEntries);
+      const allCodes = getAllValidCodes(conflictText, singleEntries, singleIndex);
       if (allCodes.length === 0) {
         const msg = `"${conflictText}" 在单字字典中无匹配条目 (因 "${me.text}" 冲突)`;
         console.error(`    [错误] ${msg}`);
@@ -391,12 +388,9 @@ function main() {
       let resolved = false;
       const blockedBy = [];
       for (const cand of candidates) {
+        const entryTexts = codes1000Set.has(cand) ? [] : (dicts.phraseLookup.get(cand) || []);
         const unresolvable = [...new Set(
-          phraseFull.entries
-            .filter(e => e.code === cand)
-            .filter(e => !codes1000Set.has(e.code))
-            .filter(e => !texts1000.has(e.text))
-            .map(e => e.text)
+          entryTexts.filter(text => !texts1000.has(text))
         )];
 
         if (unresolvable.length > 0) {

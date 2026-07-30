@@ -144,7 +144,38 @@ function parseDict(filePath) {
   return entries;
 }
 
-function findCharShapeCodes(singleEntries, char, spCodes) {
+function buildSingleIndex(singleEntries) {
+  const index = new Map();
+  for (const e of singleEntries) {
+    const sp = e.code.slice(0, 2);
+    const shape = e.code.slice(2);
+    if (!index.has(e.text)) index.set(e.text, new Map());
+    const charMap = index.get(e.text);
+    const prev = charMap.get(sp);
+    if (!prev || e.code.length > prev.fullCode.length) {
+      charMap.set(sp, {
+        sp,
+        fullCode: e.code,
+        shape,
+        firstShape: shape.length > 0 ? shape[0] : '',
+      });
+    }
+  }
+  return index;
+}
+
+function findCharShapeCodes(singleEntries, char, spCodes, index) {
+  if (index) {
+    const charMap = index.get(char);
+    if (!charMap) return [];
+    const result = [];
+    for (const sp of spCodes) {
+      const info = charMap.get(sp);
+      if (info) result.push({ ...info });
+    }
+    return result;
+  }
+
   const groups = new Map();
 
   for (const entry of singleEntries) {
@@ -242,6 +273,7 @@ function buildPhraseLookup(phraseEntries) {
 function checkPhrase(chars, pinyins, dicts) {
   const singleEntries = (dicts && dicts.singleEntries) || parseDict(SINGLE_DICT);
   const phraseLookup = (dicts && dicts.phraseLookup) || buildPhraseLookup(parseDict(PHRASE_DICT));
+  const index = dicts && dicts.index;
 
   const allSpOptions = [];
   for (let i = 0; i < chars.length; i++) {
@@ -250,7 +282,7 @@ function checkPhrase(chars, pinyins, dicts) {
 
   const charInfos = [];
   for (let i = 0; i < chars.length; i++) {
-    const variants = findCharShapeCodes(singleEntries, chars[i], allSpOptions[i]);
+    const variants = findCharShapeCodes(singleEntries, chars[i], allSpOptions[i], index);
     if (variants.length === 0) {
       const err = new Error('CHAR_NOT_FOUND');
       err.char = chars[i];
@@ -287,19 +319,25 @@ function checkPhrase(chars, pinyins, dicts) {
   };
 }
 
-function getAllValidCodes(text, singleEntries) {
+function getAllValidCodes(text, singleEntries, index) {
   const chars = [...text];
   const charVariants = [];
   for (const ch of chars) {
-    const spSet = new Set();
-    for (const entry of singleEntries) {
-      if (entry.text === ch) {
-        spSet.add(entry.code.slice(0, 2));
+    if (index) {
+      const charMap = index.get(ch);
+      if (!charMap) return [];
+      charVariants.push([...charMap.values()]);
+    } else {
+      const spSet = new Set();
+      for (const entry of singleEntries) {
+        if (entry.text === ch) {
+          spSet.add(entry.code.slice(0, 2));
+        }
       }
+      const variants = findCharShapeCodes(singleEntries, ch, [...spSet]);
+      if (variants.length === 0) return [];
+      charVariants.push(variants);
     }
-    const variants = findCharShapeCodes(singleEntries, ch, [...spSet]);
-    if (variants.length === 0) return [];
-    charVariants.push(variants);
   }
   return generateCodes(chars.length, charVariants);
 }
@@ -381,6 +419,7 @@ function main() {
 module.exports = {
   parseDict,
   buildPhraseLookup,
+  buildSingleIndex,
   pinyinToShuangpin,
   findCharShapeCodes,
   generateCodes,
