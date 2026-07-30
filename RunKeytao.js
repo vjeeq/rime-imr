@@ -3,14 +3,13 @@ const path = require('path')
  * @type {() => Promise<{totalCount: number, successCount: number, skipCount: number, hasWarn: boolean}>}
  */
 const updateFiles = require(path.join(__dirname, 'scripts', 'download'));
-/** @type {() => void} */
-const ss = require(path.join(__dirname, 'scripts', 'keytao_ss'));
+const supplement = require(path.join(__dirname, 'scripts', 'keytao_supplement'));
 const extend = require(path.join(__dirname, 'scripts', 'keytao_extend'));
 
 (async () => {
     try {
         await updateFiles.keytao();
-        ss();
+        supplement();
         extend();
         console.log('\n✓ All done');
     } catch (error) {
