@@ -83,8 +83,8 @@ function parseMyDict(filePath, warnings, errors) {
       continue;
     }
 
-    if (weight !== 100 && weight !== 1000) {
-      errors.push({ summary: `${fileName}:${lineno + 1} "${text}" 权重不是0/100/1000` });
+    if (!isWeight100(weight) && !isWeight1000(weight)) {
+      errors.push({ summary: `${fileName}:${lineno + 1} "${text}" 权重不在有效范围` });
       continue;
     }
 
@@ -106,6 +106,9 @@ function parseMyDict(filePath, warnings, errors) {
 function formatLine(entry) {
   return `${entry.text}\t${entry.code}\t${entry.weight}`;
 }
+
+function isWeight1000(w) { return w >= 1000 && w < 2000; }
+function isWeight100(w)  { return w >= 100  && w < 200;  }
 
 function getSpPos(charIdx, wordLen) {
   if (wordLen === 2) return charIdx * 2;
@@ -200,8 +203,10 @@ function main() {
   for (const e of myEntries) {
     if (e.weight === 0) {
       console.log(`  [删除] ${e.text} (${e.code})`);
+    } else if (isWeight1000(e.weight)) {
+      console.log(`  [新增] ${e.text} (${e.code})`);
     } else {
-      console.log(`  [${e.weight === 1000 ? '新增' : '修改'}] ${e.text} (${e.code})`);
+      console.log(`  [修改] ${e.text} (${e.code})`);
     }
   }
 
@@ -266,6 +271,10 @@ function main() {
   }
   for (const [code, entries] of codeCount) {
     if (entries.length > 1) {
+      const texts = new Set(entries.map(e => e.text));
+      if (texts.size > 1) continue;
+      const uniqueWeights = new Set(entries.map(e => e.weight));
+      if (uniqueWeights.size === entries.length) continue;
       const names = entries.map(e => `"${e.text}"(${e.file}:${e.line})`).join(', ');
       warnings.push(`编码 "${code}" 在用户词典中重复: ${names}`);
     }
@@ -279,8 +288,8 @@ function main() {
   console.log('  全部编码合法');
 
   console.log('\n=== 步骤4: 检查 text 同时出现在100和1000中 ===');
-  const texts100 = new Set(myEntries.filter(e => e.weight === 100).map(e => e.text));
-  const texts1000 = new Set(myEntries.filter(e => e.weight === 1000).map(e => e.text));
+  const texts100 = new Set(myEntries.filter(e => isWeight100(e.weight)).map(e => e.text));
+  const texts1000 = new Set(myEntries.filter(e => isWeight1000(e.weight)).map(e => e.text));
   for (const t of texts100) {
     if (texts1000.has(t)) {
       const msg = `"${t}" 同时出现在100-weight和1000-weight条目中, 语义矛盾`;
@@ -336,7 +345,7 @@ function main() {
   const implicitRemoved = [];
   let cannotResolve = false;
 
-  const entries1000 = myEntries.filter(e => e.weight === 1000);
+  const entries1000 = myEntries.filter(e => isWeight1000(e.weight));
   const codes1000Set = new Set(entries1000.map(e => e.code));
 
   for (let i = workingEntries.length - 1; i >= 0; i--) {
@@ -493,7 +502,9 @@ function main() {
       hasError = true;
     }
     if (plannedEntries.has(key)) {
-      if (plannedEntries.get(key).weight === (me.weight === 1000 ? '1000' : '100')) {
+      const prevWeight = parseInt(plannedEntries.get(key).weight, 10);
+      if ((isWeight1000(prevWeight) && isWeight1000(me.weight)) ||
+          (isWeight100(prevWeight) && isWeight100(me.weight))) {
         continue;
       }
       const msg = `"${me.code}" (${me.text}) 在用户词典中重复出现但权重不一致`;
@@ -504,7 +515,7 @@ function main() {
     plannedEntries.set(key, {
       text: me.text,
       code: me.code,
-      weight: me.weight === 1000 ? '1000' : '100',
+      weight: String(me.weight),
     });
   }
 
