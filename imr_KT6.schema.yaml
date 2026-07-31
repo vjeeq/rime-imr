@@ -5,6 +5,9 @@ schema:
   schema_id: imr_KT6
   name: IME-键道6
   version: "alpha"
+  dependencies:
+    - imr_KT6_lookup
+    - imr_pinyin_comment
 
 switches:
   - name: ascii_mode
@@ -42,8 +45,8 @@ engine:
     - ascii_composer
     - recognizer
     - key_binder
-    - lua_processor@*for_topup
     - lua_processor@*smart_2
+    - lua_processor@*for_topup
     - speller
     - punctuator
     - selector
@@ -53,22 +56,26 @@ engine:
     - ascii_segmentor
     - matcher
     - abc_segmentor
+    - affix_segmentor@lookup
     - punct_segmentor
     - fallback_segmentor
   translators:
     - punct_translator
     - table_translator
+    - table_translator@lookup
+    - history_translator@repeat_history
   filters:
     - simplifier@simplification
     - uniquifier
+    - reverse_lookup_filter@reverse_lookup
     - lua_filter@*keytao_filter
 
 
 speller:
   auto_select: false
   auto_select_unique_candidate: false
-  alphabet: "abcdefghijklmnopqrstuvwxyz"
-  initials: "abcdefghijklmnopqrstuvwxyz"
+  alphabet: "abcdefghijklmnopqrstuvwxyz;"
+  initials: "abcdefghijklmnopqrstuvwxyz;"
 
 
 translator:
@@ -80,6 +87,10 @@ translator:
   enable_user_dict: false
   encode_commit_history: true
   max_phrase_length: 6
+repeat_history:
+  input: ;
+  size: 1
+  initial_quality: 10000
 
 simplification:
   opencc_config: s2t.json
@@ -88,11 +99,26 @@ simplification:
 key_binder:
   import_preset: default
 
+lookup:
+  tag: lookup
+  dictionary: imr_KT6_lookup
+  enable_user_dict: false
+  prefix: ";"
+  tips: "  〔反查〕"
+  comment_format:
+    - erase/^.*$//
+
+reverse_lookup:
+  tags: [ lookup ]
+  dictionary: imr_pinyin_comment
+  comment_format:
+    __include: config/comment_format:/万象
 
 recognizer:
   import_preset: default
   patterns:
     uppercase: "[A-Z][-_+.'0-9A-Za-z]*$"   # 解决路由
+    lookup: "^;[a-z]+$"
 
 
 topup:

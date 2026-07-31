@@ -1,0 +1,13 @@
+# Rime dictionary
+# encoding: utf-8
+#
+# imr_KT6的反查
+#
+
+---
+name: imr_KT6_lookup
+version: zzz
+import_tables:
+  - dicts/lookup/radical_pinyin
+  - dicts/lookup/stroke
+...

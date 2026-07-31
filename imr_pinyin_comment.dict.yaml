@@ -1,0 +1,12 @@
+# Rime dictionary
+# encoding: utf-8
+#
+# 拼音提示
+#
+
+---
+name: imr_pinyin_comment
+version: zzz
+import_tables:
+  - dicts/wanxiang/zi
+...

@@ -1,0 +1,121 @@
+# Rime schema settings
+# encoding: utf-8
+
+schema:
+  schema_id: imr_KT6_lookup
+  name: imr-KT6-反查
+  version: zzz
+speller:
+  algebra:
+    # stroke
+    - xform/^([hspnz]+)$/\U${1}/
+    - xform/H/V/
+    - xform/S/I/
+    - xform/P/U/
+    - xform/N/O/
+    - xform/Z/A/
+
+    # radical_pinyin
+    - xform/(^|')([jqxy])u/${1}${2}v/
+    - xform/(^|')([aoe])(.*)(?='|$)/${1}X${2}${3}/
+    # J - ch
+    - xform/(^|')chai(?='|$)/${1}JH/
+    - xform/(^|')chan(?='|$)/${1}JF/
+    - xform/(^|')chang(?='|$)/${1}JP/
+    - xform/(^|')chen(?='|$)/${1}JN/
+    - xform/(^|')cheng(?='|$)/${1}JR/
+    - xform/(^|')chu(?='|$)/${1}JJ/
+    - xform/(^|')chun(?='|$)/${1}JW/
+    # W - ch
+    - xform/(^|')cha(?='|$)/${1}WS/
+    - xform/(^|')chi(?='|$)/${1}WK/
+    - xform/(^|')chong(?='|$)/${1}WY/
+    - xform/(^|')chou(?='|$)/${1}WD/
+    - xform/(^|')chua(?='|$)/${1}WQ/
+    - xform/(^|')chuai(?='|$)/${1}WG/
+    - xform/(^|')chuan(?='|$)/${1}WT/
+    - derive/(^|')chuang(?='|$)/${1}WX/
+    - derive/(^|')chuang(?='|$)/${1}WM/
+    - erase/(^|')chuang(?='|$)/
+    - xform/(^|')chui(?='|$)/${1}WB/
+    - xform/(^|')chuo(?='|$)/${1}WL/
+    # J/W - ch
+    - derive/(^|')chao(?='|$)/${1}JZ/
+    - derive/(^|')chao(?='|$)/${1}WZ/
+    - erase/(^|')chao(?='|$)/
+    - derive/(^|')che(?='|$)/${1}JE/
+    - derive/(^|')che(?='|$)/${1}WE/
+    - erase/(^|')che(?='|$)/
+    # Q - zh
+    - xform/(^|')zhan(?='|$)/${1}QF/
+    - xform/(^|')zhang(?='|$)/${1}QP/
+    - xform/(^|')zhei(?='|$)/${1}QW/
+    - xform/(^|')zhen(?='|$)/${1}QN/
+    - xform/(^|')zheng(?='|$)/${1}QR/
+    - xform/(^|')zhu(?='|$)/${1}QJ/
+    - xform/(^|')zhun(?='|$)/${1}QW/
+    # F - zh
+    - xform/(^|')zha(?='|$)/${1}FS/
+    - xform/(^|')zhi(?='|$)/${1}FK/
+    - xform/(^|')zhong(?='|$)/${1}FY/
+    - xform/(^|')zhou(?='|$)/${1}FD/
+    - xform/(^|')zhua(?='|$)/${1}FQ/
+    - xform/(^|')zhuai(?='|$)/${1}FG/
+    - xform/(^|')zhuan(?='|$)/${1}FT/
+    - derive/(^|')zhuang(?='|$)/${1}FX/
+    - derive/(^|')zhuang(?='|$)/${1}FM/
+    - erase/(^|')zhuang(?='|$)/
+    - xform/(^|')zhui(?='|$)/${1}FB/
+    - xform/(^|')zhuo(?='|$)/${1}FL/
+    # Q/F - zh
+    - derive/(^|')zhai(?='|$)/${1}QH/
+    - derive/(^|')zhai(?='|$)/${1}FH/
+    - erase/(^|')zhai(?='|$)/
+    - derive/(^|')zhao(?='|$)/${1}QZ/
+    - derive/(^|')zhao(?='|$)/${1}FZ/
+    - erase/(^|')zhao(?='|$)/
+    - derive/(^|')zhe(?='|$)/${1}QE/
+    - derive/(^|')zhe(?='|$)/${1}FE/
+    - erase/(^|')zhe(?='|$)/
+    # X/M - uang
+    - derive/(^|')shuang(?='|$)/${1}EX/
+    - derive/(^|')shuang(?='|$)/${1}EM/
+    - erase/(^|')shuang(?='|$)/
+    - derive/(^|')guang(?='|$)/${1}GX/
+    - derive/(^|')guang(?='|$)/${1}GM/
+    - erase/(^|')guang(?='|$)/
+    - derive/(^|')huang(?='|$)/${1}HX/
+    - derive/(^|')huang(?='|$)/${1}HM/
+    - erase/(^|')huang(?='|$)/
+    - derive/(^|')kuang(?='|$)/${1}KX/
+    - derive/(^|')kuang(?='|$)/${1}KM/
+    - erase/(^|')kuang(?='|$)/
+
+    - xform/(^|')sh/${1}E/
+    - xform/(^|')([a-z])/${1}\u${2}/
+
+    - xform/((^|')[A-Z])(iu|ua)(?='|$)/${1}Q/
+    - xform/((^|')[A-Z])(ei|un)(?='|$)/${1}W/
+    - xform/((^|')[A-Z])e(?='|$)/${1}E/
+    - xform/((^|')[A-Z])eng(?='|$)/${1}R/
+    - xform/((^|')[A-Z])uan(?='|$)/${1}T/
+    - xform/((^|')[A-Z])i?ong(?='|$)/${1}Y/
+    - xform/((^|')[A-Z])ang(?='|$)/${1}P/
+    - xform/((^|')[A-Z])i?a(?='|$)/${1}S/
+    - xform/((^|')[A-Z])an(?='|$)/${1}F/
+    - xform/((^|')[A-Z])(ie|ou)(?='|$)/${1}D/
+    - xform/((^|')[A-Z])(ing|uai)(?='|$)/${1}G/
+    - xform/((^|')[A-Z])(ai|ve)(?='|$)/${1}H/
+    - xform/((^|')[A-Z])(u|er)(?='|$)/${1}J/
+    - xform/((^|')[A-Z])i(?='|$)/${1}K/
+    - xform/((^|')[A-Z])(u?o|v)(?='|$)/${1}L/
+    - xform/((^|')[A-Z])ao(?='|$)/${1}Z/
+    - xform/((^|')[A-Z])[ui]ang(?='|$)/${1}X/
+    - xform/((^|')[A-Z])iao(?='|$)/${1}C/
+    - xform/((^|')[A-Z])(in|ui)(?='|$)/${1}B/
+    - xform/((^|')[A-Z])en(?='|$)/${1}N/
+    - xform/((^|')[A-Z])(uang|ian)(?='|$)/${1}M/
+    - xlit/ABCDEFGHIJKLMNOPQRSTUVWXYZ/abcdefghijklmnopqrstuvwxyz/
+    - xform/'//
+translator:
+  dictionary: imr_KT6_lookup
