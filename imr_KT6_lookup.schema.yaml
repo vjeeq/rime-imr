@@ -1,5 +1,20 @@
 # Rime schema settings
 # encoding: utf-8
+#
+# imr_KT6的反查
+#
+# 1. 为什么要将`拆字反查`和`笔画`反查放在一起？
+#   因为键道音形分离，可以放在一起，普通双拼要分开
+# 2. 为什么要把`ch`/`zh`/`uang`单独列出来？
+#   因为这是一(radical_pinyin)对多(imr_KT6_lookup)，
+#   如果按照一般方式简写，会导致q/f共用时，只能输入1个
+# 问题1: '廣' -> 'guanghuang' 应该可以';gxhx'/';gxhm'/';gmhx'/';gmhm'
+#   但如果不单列出来，只能输入';gxhx'和';gmhm'才可以，现在可以输入';gxhm'和';gmhx'。
+# 问题2：'䡛' -> 'cheche' 应该可以';wewe'/';jeje'/';weje'/';jewe'
+#   现在无法彻底解决这个问题。
+# 对于问题1，可能记的编码就是'gx'和'hm'，而输入';gxhm'不能出，所以问题一定要解决。
+# 对于问题2，由于只是同音，正常会输入相同编码，不会触发这个问题，所以可以不处理。
+#   
 
 schema:
   schema_id: imr_KT6_lookup
@@ -115,7 +130,8 @@ speller:
     - xform/((^|')[A-Z])(in|ui)(?='|$)/${1}B/
     - xform/((^|')[A-Z])en(?='|$)/${1}N/
     - xform/((^|')[A-Z])(uang|ian)(?='|$)/${1}M/
-    - xlit/ABCDEFGHIJKLMNOPQRSTUVWXYZ/abcdefghijklmnopqrstuvwxyz/
     - xform/'//
+
+    - xlit/ABCDEFGHIJKLMNOPQRSTUVWXYZ/abcdefghijklmnopqrstuvwxyz/
 translator:
   dictionary: imr_KT6_lookup
