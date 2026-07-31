@@ -38,6 +38,13 @@ const pinyinFiles = {
 
 /** @type {Record<string, string>} 本地路径 → 远程下载地址 */
 const keytaoFiles = {
+    //// 拼音拆字
+    'dicts/lookup/radical_pinyin.dict.yaml': 'https://cdn.jsdelivr.net/gh/mirtlecn/rime-radical-pinyin@master/radical_pinyin.dict.yaml',
+    //// 笔画
+    'dicts/lookup/stroke.dict.yaml': 'https://cdn.jsdelivr.net/gh/rime/rime-stroke@master/stroke.dict.yaml',
+    //// 万象字
+    'dicts/wanxiang/zi.dict.yaml': 'https://cnb.cool/amzxyz/rime-wanxiang/-/git/raw/wanxiang/dicts/zi.dict.yaml',
+    //// 键道
     'dicts/keytao/keytao.single.dict.yaml': 'https://cdn.jsdelivr.net/gh/xkinput/KeyTao@master/rime/keytao.single.dict.yaml',
     'dicts/keytao/keytao.phrase.dict.yaml': 'https://cdn.jsdelivr.net/gh/xkinput/KeyTao@master/rime/keytao.phrase.dict.yaml',
     'dicts/keytao/keytao.supplement.dict.yaml': 'https://cdn.jsdelivr.net/gh/xkinput/KeyTao@master/rime/keytao.supplement.dict.yaml',
