@@ -31,7 +31,8 @@ speller:
     - xform/Z/A/
 
     # radical_pinyin
-    - xform/(^|')([jqxy])u/${1}${2}v/
+    - xform/(^|')([jqxy])u(?='|$)/${1}${2}v/
+    - xform/(^|')([jqxy])ue(?='|$)/${1}${2}ve/
     - xform/(^|')([aoe])(.*)(?='|$)/${1}X${2}${3}/
     # J - ch
     - xform/(^|')chai(?='|$)/${1}JH/
