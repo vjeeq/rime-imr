@@ -32,6 +32,9 @@ app_options:
   idea64.exe:              # IntelliJ IDEA:
     ascii_mode: true
     vim_mode: true         #  vim 模式
+  windowsterminal.exe:
+    ascii_mode: true
+    inline_preedit: true
   # cmd.exe:               # 带 .exe 的进程名：Weasel 15.0 及之前版本须小写
   #   ascii_mode: true     # 英文模式
   # conhost.exe:
