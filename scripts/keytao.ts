@@ -38,7 +38,7 @@ const CH_J = new Set(['ai', 'an', 'ang', 'en', 'eng', 'u', 'un']);
 const CH_W = new Set(['a', 'i', 'ong', 'ou', 'ua', 'uai', 'uan', 'uang', 'ui', 'uo']);
 const CH_JW = new Set(['ao', 'e']);
 
-function pinyinToShuangpin(pinyin: string) {
+function pinyinToShuangpin(pinyin: string): string[] {
   if (pinyin.match(/^[jqxy]u$/)) {
     pinyin = pinyin.replace('u', 'v');
   }
@@ -73,11 +73,11 @@ function pinyinToShuangpin(pinyin: string) {
     default:
       if (yun === 'uang') {
         return [
-          sheng === 'sh' ? 'e' : sheng + 'm',
-          sheng === 'sh' ? 'e' : sheng + 'x'
+          (sheng === 'sh' ? 'e' : sheng) + 'm',
+          (sheng === 'sh' ? 'e' : sheng) + 'x'
         ];
       } else {
-        return [sheng === 'sh' ? 'e' : sheng + YINPIN_MAP[yun]];
+        return [(sheng === 'sh' ? 'e' : sheng) + YINPIN_MAP[yun]];
       }
   }
 }
