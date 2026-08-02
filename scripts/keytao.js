@@ -15,13 +15,13 @@ const INITIAL_MAP = {
   sh: 'e',
 };
 
-const ZH_FINALS_OUTER = new Set(['an', 'ang', 'ei', 'en', 'eng', 'u', 'un']);
-const ZH_FINALS_INNER = new Set(['a', 'i', 'ong', 'ou', 'ua', 'uai', 'uan', 'uang', 'ui', 'uo']);
-const ZH_FINALS_BOTH  = new Set(['ai', 'ao', 'e']);
+const ZH_Q = new Set(['an', 'ang', 'ei', 'en', 'eng', 'u', 'un']);
+const ZH_F = new Set(['a', 'i', 'ong', 'ou', 'ua', 'uai', 'uan', 'uang', 'ui', 'uo']);
+const ZH_QF = new Set(['ai', 'ao', 'e']);
 
-const CH_FINALS_OUTER = new Set(['ai', 'an', 'ang', 'en', 'eng', 'u', 'un']);
-const CH_FINALS_INNER = new Set(['a', 'i', 'ong', 'ou', 'ua', 'uai', 'uan', 'uang', 'ui', 'uo']);
-const CH_FINALS_BOTH  = new Set(['ao', 'e']);
+const CH_J = new Set(['ai', 'an', 'ang', 'en', 'eng', 'u', 'un']);
+const CH_W = new Set(['a', 'i', 'ong', 'ou', 'ua', 'uai', 'uan', 'uang', 'ui', 'uo']);
+const CH_JW = new Set(['ao', 'e']);
 
 const FINAL_MAP = {
   a: 's', ai: 'h', an: 'f', ang: 'p', ao: 'z',
@@ -29,97 +29,49 @@ const FINAL_MAP = {
   i: 'k', ia: 's', ian: 'm', iang: 'x', iao: 'c',
   ie: 'd', in: 'b', ing: 'g', iong: 'y', iu: 'q',
   o: 'l', ong: 'y', ou: 'd',
-  u: 'j', ua: 'q', uai: 'g', uan: 't', uang: 'm',
-  ue: 'h', ui: 'b', un: 'w', uo: 'l',
+  u: 'j', ua: 'q', uai: 'g', uan: 't', 
+  ve: 'h', ue: 'h', ui: 'b', un: 'w', uo: 'l',
   v: 'l',
 };
-
-const UANG_ALT = 'x';
-
-function resolveInitials(pinyin) {
-  const initials = [];
-  let initialPart, finalPart;
-
-  if (pinyin.startsWith('zh')) { initialPart = 'zh'; finalPart = pinyin.slice(2); }
-  else if (pinyin.startsWith('ch')) { initialPart = 'ch'; finalPart = pinyin.slice(2); }
-  else if (pinyin.startsWith('sh')) { initialPart = 'sh'; finalPart = pinyin.slice(2); }
-  else {
-    const m = pinyin.match(/^([bpmfdtnlgkhjqxrzcsyw]?)(.*)/);
-    initialPart = m[1] || '';
-    finalPart = m[2];
-  }
-
-  if (initialPart === '') {
-    initials.push({ key: 'x', final: finalPart, initial: initialPart });
-    return initials;
-  }
-
-  if (initialPart === 'zh') {
-    const fin = finalPart;
-    const outerOk = ZH_FINALS_OUTER.has(fin);
-    const innerOk = ZH_FINALS_INNER.has(fin);
-    const bothOk  = ZH_FINALS_BOTH.has(fin);
-
-    if (outerOk) {
-      initials.push({ key: 'q', final: fin, initial: initialPart });
-    }
-    if (innerOk) {
-      initials.push({ key: 'f', final: fin, initial: initialPart });
-    }
-    if (bothOk) {
-      initials.push({ key: 'q', final: fin, initial: initialPart });
-      initials.push({ key: 'f', final: fin, initial: initialPart });
-    }
-    return initials;
-  }
-
-  if (initialPart === 'ch') {
-    const fin = finalPart;
-    const outerOk = CH_FINALS_OUTER.has(fin);
-    const innerOk = CH_FINALS_INNER.has(fin);
-    const bothOk  = CH_FINALS_BOTH.has(fin);
-
-    if (outerOk) {
-      initials.push({ key: 'j', final: fin, initial: initialPart });
-    }
-    if (innerOk) {
-      initials.push({ key: 'w', final: fin, initial: initialPart });
-    }
-    if (bothOk) {
-      initials.push({ key: 'j', final: fin, initial: initialPart });
-      initials.push({ key: 'w', final: fin, initial: initialPart });
-    }
-    return initials;
-  }
-
-  initials.push({ key: INITIAL_MAP[initialPart] || initialPart, final: finalPart, initial: initialPart });
-  return initials;
-}
-
 function pinyinToShuangpin(pinyin) {
-  const results = [];
-  const initialOptions = resolveInitials(pinyin);
-
-  for (const opt of initialOptions) {
-    let finalKey = FINAL_MAP[opt.final];
-    if (['j', 'q', 'x', 'y'].includes(opt.initial) && opt.final === 'u') {
-      finalKey = 'l';
-    }
-    if (finalKey === undefined) {
-      finalKey = opt.final;
-    }
-
-    const finals = [finalKey];
-    if (finalKey === 'm' && opt.final === 'uang') {
-      finals.push(UANG_ALT);
-    }
-
-    for (const fk of finals) {
-      results.push(opt.key + fk);
-    }
+  if (pinyin.match(/^[jqxy]u$/)) {
+    pinyin = pinyin.replace('u', 'v');
   }
-
-  return [...new Set(results)];
+  const [_, sheng, yun] = pinyin.match(/^([zcs]h|[bpmfdtnlgkhjqxrzcsyw]?)(.*)/);
+  switch (sheng) {
+    case '':
+      return ['x' + FINAL_MAP[yun]];
+    case 'zh':
+      if (ZH_Q.has(yun)) {
+        return ['q' + FINAL_MAP[yun]];
+      }
+      if (ZH_F.has(yun)) {
+        if (yun === 'uang') {
+          return ['fm', 'fx'];
+        } else {
+          return ['f' + FINAL_MAP[yun]];
+        }
+      }
+      return ['f' + FINAL_MAP[yun], 'q' + FINAL_MAP[yun]];
+    case 'ch':
+      if (CH_J.has(yun)) {
+        return ['j' + FINAL_MAP[yun]];
+      }
+      if (CH_W.has(yun)) {
+        if (yun === 'uang') {
+          return ['wm', 'wx'];
+        } else {
+          return ['w' + FINAL_MAP[yun]];
+        }
+      }
+      return ['j' + FINAL_MAP[yun], 'w' + FINAL_MAP[yun]];
+    default:
+      if (yun === 'uang') {
+        return [INITIAL_MAP[sheng] + 'm', INITIAL_MAP[sheng] + 'x'];
+      } else {
+        return [INITIAL_MAP[sheng] + FINAL_MAP[yun]];
+      }
+  }
 }
 
 function parseDict(filePath) {
