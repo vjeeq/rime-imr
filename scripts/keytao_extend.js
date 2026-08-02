@@ -8,7 +8,7 @@ const {
   checkPhrase,
   getAllValidCodes,
   pinyinToShuangpin,
-} = require('./keytao');
+} = require('./keytao.ts');
 
 const ZI_DICT = path.join(__dirname, '..', 'dicts', 'keytao', 'keytao.single.dict.yaml');
 const PHRASE_DICT = path.join(__dirname, '..', 'dicts', 'keytao', 'keytao.phrase.dict.yaml');

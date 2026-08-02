@@ -5,14 +5,29 @@ const BASE_DIR = path.join(__dirname, '..', 'dicts', 'keytao');
 const SINGLE_DICT = path.join(BASE_DIR, 'keytao.single.dict.yaml');
 const PHRASE_DICT = path.join(BASE_DIR, 'keytao.phrase.dict.yaml');
 
-const INITIAL_MAP = {
-  b: 'b', p: 'p', m: 'm', f: 'f',
-  d: 'd', t: 't', n: 'n', l: 'l',
-  g: 'g', k: 'k', h: 'h',
-  j: 'j', q: 'q', x: 'x',
-  r: 'r', z: 'z', c: 'c', s: 's',
-  y: 'y', w: 'w',
-  sh: 'e',
+const YINPIN_MAP: Record<string, string> = {
+  iu: 'q', ua: 'q',
+  ei: 'w', un: 'w',
+  e: 'e',
+  eng: 'r',
+  uan: 't',
+  ong: 'y', iong: 'y',
+  ang: 'p',
+  a: 's', ia: 's',
+  ie: 'd', ou: 'd',
+  an: 'f',
+  ing: 'g', uai: 'g',
+  ai: 'h', ue: 'h', ve: 'h',
+  u: 'j', er: 'j',
+  i: 'k',
+  o: 'l', uo: 'l', v: 'l',
+  ao: 'z',
+  iang: 'x', // uang: 'x',
+  iao: 'c',
+  in: 'b',
+  ui: 'b',
+  en: 'n',
+  ian: 'm', // uang: 'm',
 };
 
 const ZH_Q = new Set(['an', 'ang', 'ei', 'en', 'eng', 'u', 'un']);
@@ -23,58 +38,51 @@ const CH_J = new Set(['ai', 'an', 'ang', 'en', 'eng', 'u', 'un']);
 const CH_W = new Set(['a', 'i', 'ong', 'ou', 'ua', 'uai', 'uan', 'uang', 'ui', 'uo']);
 const CH_JW = new Set(['ao', 'e']);
 
-const FINAL_MAP = {
-  a: 's', ai: 'h', an: 'f', ang: 'p', ao: 'z',
-  e: 'e', ei: 'w', en: 'n', eng: 'r', er: 'j',
-  i: 'k', ia: 's', ian: 'm', iang: 'x', iao: 'c',
-  ie: 'd', in: 'b', ing: 'g', iong: 'y', iu: 'q',
-  o: 'l', ong: 'y', ou: 'd',
-  u: 'j', ua: 'q', uai: 'g', uan: 't', 
-  ve: 'h', ue: 'h', ui: 'b', un: 'w', uo: 'l',
-  v: 'l',
-};
-function pinyinToShuangpin(pinyin) {
+function pinyinToShuangpin(pinyin: string) {
   if (pinyin.match(/^[jqxy]u$/)) {
     pinyin = pinyin.replace('u', 'v');
   }
-  const [_, sheng, yun] = pinyin.match(/^([zcs]h|[bpmfdtnlgkhjqxrzcsyw]?)(.*)/);
+  const [_, sheng, yun] = pinyin.match(/^([zcs]h|[bpmfdtnlgkhjqxrzcsyw]?)(.*)/) as RegExpMatchArray;
   switch (sheng) {
     case '':
-      return ['x' + FINAL_MAP[yun]];
+      return ['x' + YINPIN_MAP[yun]];
     case 'zh':
       if (ZH_Q.has(yun)) {
-        return ['q' + FINAL_MAP[yun]];
+        return ['q' + YINPIN_MAP[yun]];
       }
       if (ZH_F.has(yun)) {
         if (yun === 'uang') {
           return ['fm', 'fx'];
         } else {
-          return ['f' + FINAL_MAP[yun]];
+          return ['f' + YINPIN_MAP[yun]];
         }
       }
-      return ['f' + FINAL_MAP[yun], 'q' + FINAL_MAP[yun]];
+      return ['f' + YINPIN_MAP[yun], 'q' + YINPIN_MAP[yun]];
     case 'ch':
       if (CH_J.has(yun)) {
-        return ['j' + FINAL_MAP[yun]];
+        return ['j' + YINPIN_MAP[yun]];
       }
       if (CH_W.has(yun)) {
         if (yun === 'uang') {
           return ['wm', 'wx'];
         } else {
-          return ['w' + FINAL_MAP[yun]];
+          return ['w' + YINPIN_MAP[yun]];
         }
       }
-      return ['j' + FINAL_MAP[yun], 'w' + FINAL_MAP[yun]];
+      return ['j' + YINPIN_MAP[yun], 'w' + YINPIN_MAP[yun]];
     default:
       if (yun === 'uang') {
-        return [INITIAL_MAP[sheng] + 'm', INITIAL_MAP[sheng] + 'x'];
+        return [
+          sheng === 'sh' ? 'e' : sheng + 'm',
+          sheng === 'sh' ? 'e' : sheng + 'x'
+        ];
       } else {
-        return [INITIAL_MAP[sheng] + FINAL_MAP[yun]];
+        return [sheng === 'sh' ? 'e' : sheng + YINPIN_MAP[yun]];
       }
   }
 }
 
-function parseDict(filePath) {
+function parseDict(filePath: string) {
   const content = fs.readFileSync(filePath, 'utf-8');
   const lines = content.split('\n');
   const entries = [];
