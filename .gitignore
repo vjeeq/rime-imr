@@ -3,6 +3,9 @@
 **/.idea/
 .vscode/
 dist/
+node_modules/
+package.json
+package-lock.json
 
 # rime
 build/
