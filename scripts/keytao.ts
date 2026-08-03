@@ -108,17 +108,11 @@ function buildSingleIndex(singleEntries) {
   const index = new Map();
   for (const e of singleEntries) {
     const sp = e.code.slice(0, 2);
-    const shape = e.code.slice(2);
     if (!index.has(e.text)) index.set(e.text, new Map());
     const charMap = index.get(e.text);
     const prev = charMap.get(sp);
-    if (!prev || e.code.length > prev.fullCode.length) {
-      charMap.set(sp, {
-        sp,
-        fullCode: e.code,
-        shape,
-        firstShape: shape.length > 0 ? shape[0] : '',
-      });
+    if (!prev || e.code.length > prev.length) {
+      charMap.set(sp, e.code);
     }
   }
   return index;
@@ -130,8 +124,8 @@ function findCharShapeCodes(singleEntries, char, spCodes, index) {
     if (!charMap) return [];
     const result = [];
     for (const sp of spCodes) {
-      const info = charMap.get(sp);
-      if (info) result.push({ ...info });
+      const code = charMap.get(sp);
+      if (code) result.push(code);
     }
     return result;
   }
@@ -142,78 +136,59 @@ function findCharShapeCodes(singleEntries, char, spCodes, index) {
     if (entry.text !== char) continue;
     for (const sp of spCodes) {
       if (entry.code.startsWith(sp)) {
-        const shapePart = entry.code.slice(sp.length);
         if (!groups.has(sp)) {
           groups.set(sp, []);
         }
-        groups.get(sp).push({ sp, code: entry.code, shape: shapePart });
+        groups.get(sp).push(entry.code);
       }
     }
   }
 
   const result = [];
-  for (const [, entries] of groups) {
-    entries.sort((a, b) => b.code.length - a.code.length);
-    const longest = entries[0];
-    result.push({
-      sp: longest.sp,
-      fullCode: longest.code,
-      shape: longest.shape,
-      firstShape: longest.shape.length > 0 ? longest.shape[0] : '',
-    });
+  for (const [, codes] of groups) {
+    codes.sort((a, b) => b.length - a.length);
+    result.push(codes[0]);
   }
   return result;
 }
 
-function cartesian(arrays) {
-  if (arrays.length === 0) return [[]];
-  const [first, ...rest] = arrays;
-  const restProduct = cartesian(rest);
-  const result = [];
-  for (const item of first) {
-    for (const combo of restProduct) {
-      result.push([item, ...combo]);
+/**
+ * 
+ * @param chars chars[i] = [第i+1个字的全码]
+ * @returns 词的所有编码
+ */
+function generateCodes(chars: string[][]) {
+  console.log(chars)
+  const combos: string[][] = chars.reduce<string[][]>(
+    (acc, curr) => acc.flatMap((c) => curr.map((v) => [...c, v])),
+    [[]]
+  );
+  return [... new Set(combos.flatMap(combo => {
+    switch (chars.length) {
+      case 2:
+        const base2: string = combo[0].slice(0, 2) + combo[1].slice(0, 2);
+        return [
+          base2,
+          base2 + combo[0].charAt(2),
+          base2 + combo[0].charAt(2) + combo[1].charAt(2),
+        ];
+      case 3:
+        const base3: string = combo[0].charAt(0) + combo[1].charAt(0) + combo[2].charAt(0);
+        return [
+          base3,
+          base3 + combo[0].charAt(2),
+          base3 + combo[0].charAt(2) + combo[1].charAt(2),
+          base3 + combo[0].charAt(2) + combo[1].charAt(2) + combo[2].charAt(2),
+        ];
+      default:
+        const base4: string = combo[0].charAt(0) + combo[1].charAt(0) + combo[2].charAt(0) + combo[combo.length - 1].charAt(0);
+        return [
+          base4,
+          base4 + combo[0].charAt(2),
+          base4 + combo[0].charAt(2) + combo[1].charAt(2),
+        ];
     }
-  }
-  return result;
-}
-
-function generateCodes(wordLen, charVariants) {
-  const combos = cartesian(charVariants);
-  const results = new Set();
-
-  for (const chars of combos) {
-    const sp = chars.map(c => c.sp);
-    const s1 = chars.map(c => c.firstShape);
-
-    if (wordLen === 2) {
-      results.add(sp[0] + sp[1]);
-      results.add(sp[0] + sp[1] + s1[0]);
-      results.add(sp[0] + sp[1] + s1[0] + s1[1]);
-    } else if (wordLen === 3) {
-      const base = sp[0][0] + sp[1][0] + sp[2][0];
-      results.add(base);
-      results.add(base + s1[0]);
-      results.add(base + s1[0] + s1[1]);
-      results.add(base + s1[0] + s1[1] + s1[2]);
-    } else if (wordLen === 4) {
-      const base = sp[0][0] + sp[1][0] + sp[2][0] + sp[3][0];
-      results.add(base);
-      results.add(base + s1[0]);
-      results.add(base + s1[0] + s1[1]);
-      results.add(base + s1[0] + s1[1] + s1[2]);
-      results.add(base + s1[0] + s1[1] + s1[2] + s1[3]);
-    } else {
-      const base = sp[0][0] + sp[1][0] + sp[2][0] + sp[wordLen - 1][0];
-      results.add(base);
-      results.add(base + s1[0]);
-      results.add(base + s1[0] + s1[1]);
-      results.add(base + s1[0] + s1[1] + s1[2]);
-      results.add(base + s1[0] + s1[1] + s1[2] + s1[3]);
-    }
-  }
-
-  return [...results];
+  }))];
 }
 
 function buildPhraseLookup(phraseEntries) {
@@ -253,7 +228,8 @@ function checkPhrase(chars, pinyins, dicts) {
     charInfos.push(variants);
   }
 
-  const codes = generateCodes(chars.length, charInfos);
+  const codes = generateCodes(charInfos);
+  console.log(codes)
 
   const conflicts = [];
   const available = [];
@@ -299,7 +275,7 @@ function getAllValidCodes(text, singleEntries, index) {
       charVariants.push(variants);
     }
   }
-  return generateCodes(chars.length, charVariants);
+  return generateCodes(charVariants);
 }
 
 function main() {
@@ -346,8 +322,10 @@ function main() {
   console.log('\n=== 步骤2: 查单字字典取形码 ===');
   console.log(`  单字字典条目数: ${result.dictStats.singleEntries}`);
   for (let i = 0; i < chars.length; i++) {
-    for (const v of result.charInfos[i]) {
-      console.log(`  ${chars[i]}: sp="${v.sp}", 最长码="${v.fullCode}", 形码="${v.shape}", 首形码="${v.firstShape}"`);
+    for (const fc of result.charInfos[i]) {
+      const sp = fc.slice(0, 2);
+      const shape = fc.slice(2);
+      console.log(`  ${chars[i]}: sp="${sp}", 最长码="${fc}", 形码="${shape}", 首形码="${shape[0] || ''}"`);
     }
   }
 
@@ -380,11 +358,9 @@ module.exports = {
   parseDict,
   buildPhraseLookup,
   buildSingleIndex,
-  pinyinToShuangpin,
-  findCharShapeCodes,
-  generateCodes,
   checkPhrase,
   getAllValidCodes,
+  pinyinToShuangpin,
 };
 
 if (require.main === module) {
