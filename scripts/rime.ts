@@ -42,4 +42,4 @@ function loadDictFile<C extends DictColumn[] = ['text', 'code', 'weight']>(fileP
     return parseDict<C>(fs.readFileSync(filePath, 'utf-8'));
 }
 
-export { parseDict, loadDictFile };
+export { parseDict, loadDictFile, type Dict };

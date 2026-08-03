@@ -1,11 +1,13 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { loadDictFile } from './rime.ts';
+import { loadDictFile, type Dict } from './rime.ts';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const BASE_DIR = path.join(__dirname, '..', 'dicts', 'keytao');
 const SINGLE_DICT = path.join(BASE_DIR, 'keytao.single.dict.yaml');
 const PHRASE_DICT = path.join(BASE_DIR, 'keytao.phrase.dict.yaml');
+
+type DictLookup = Record<string, string[]>;
 
 const YINPIN_MAP: Record<string, string> = {
   iu: 'q', ua: 'q',
@@ -84,50 +86,25 @@ function pinyinToShuangpin(pinyin: string): string[] {
   }
 }
 
-function buildSingleIndex(singleEntries) {
-  const index = new Map();
-  for (const e of singleEntries) {
-    const sp = e.code.slice(0, 2);
-    if (!index.has(e.text)) index.set(e.text, new Map());
-    const charMap = index.get(e.text);
-    const prev = charMap.get(sp);
-    if (!prev || e.code.length > prev.length) {
-      charMap.set(sp, e.code);
-    }
+function buildLookup(data: Dict['data']): DictLookup {
+  const lookup: DictLookup = {};
+  for (const e of data) (lookup[e.text] ||= []).push(e.code);
+  for (const ch of Object.keys(lookup)) {
+    const maxLen = Math.max(...lookup[ch].map(c => c.length));
+    lookup[ch] = lookup[ch].filter(c => c.length === maxLen);
   }
-  return index;
+  return lookup;
 }
 
-function findCharShapeCodes(singleEntries, char, spCodes, index) {
-  if (index) {
-    const charMap = index.get(char);
-    if (!charMap) return [];
-    const result = [];
-    for (const sp of spCodes) {
-      const code = charMap.get(sp);
-      if (code) result.push(code);
-    }
-    return result;
-  }
-
-  const groups = new Map();
-
-  for (const entry of singleEntries) {
-    if (entry.text !== char) continue;
-    for (const sp of spCodes) {
-      if (entry.code.startsWith(sp)) {
-        if (!groups.has(sp)) {
-          groups.set(sp, []);
-        }
-        groups.get(sp).push(entry.code);
-      }
-    }
-  }
-
+function findCharShapeCodes(lookup, char, spCodes) {
+  const codes = lookup[char] || [];
   const result = [];
-  for (const [, codes] of groups) {
-    codes.sort((a, b) => b.length - a.length);
-    result.push(codes[0]);
+  for (const sp of spCodes) {
+    let longest = '';
+    for (const code of codes) {
+      if (code.startsWith(sp) && code.length > longest.length) longest = code;
+    }
+    if (longest) result.push(longest);
   }
   return result;
 }
@@ -185,12 +162,11 @@ function buildPhraseLookup(phraseEntries) {
 }
 
 function lookupCharInfos(chars, pinyins, dicts) {
-  const singleEntries = (dicts && dicts.singleEntries) || loadDictFile(SINGLE_DICT).data;
-  const index = dicts && dicts.index;
+  const lookup = (dicts && dicts.lookup) || buildLookup(loadDictFile(SINGLE_DICT).data);
 
   const charInfos = [];
   for (let i = 0; i < chars.length; i++) {
-    const variants = findCharShapeCodes(singleEntries, chars[i], pinyinToShuangpin(pinyins[i]), index);
+    const variants = findCharShapeCodes(lookup, chars[i], pinyinToShuangpin(pinyins[i]));
     if (variants.length === 0) {
       const err = new Error('CHAR_NOT_FOUND');
       err.char = chars[i];
@@ -203,25 +179,13 @@ function lookupCharInfos(chars, pinyins, dicts) {
   return charInfos;
 }
 
-function getAllValidCodes(text, singleEntries, index) {
+function getAllValidCodes(text, lookup) {
   const chars = [...text];
   const charVariants = [];
   for (const ch of chars) {
-    if (index) {
-      const charMap = index.get(ch);
-      if (!charMap) return [];
-      charVariants.push([...charMap.values()]);
-    } else {
-      const spSet = new Set();
-      for (const entry of singleEntries) {
-        if (entry.text === ch) {
-          spSet.add(entry.code.slice(0, 2));
-        }
-      }
-      const variants = findCharShapeCodes(singleEntries, ch, [...spSet]);
-      if (variants.length === 0) return [];
-      charVariants.push(variants);
-    }
+    const codes = lookup[ch];
+    if (!codes) return [];
+    charVariants.push(codes);
   }
   return generateCodes(charVariants);
 }
@@ -256,13 +220,13 @@ function main() {
     console.log(`  ${chars[i]} (${pinyins[i]}) -> ${spCodes.join(', ')}`);
   }
 
-  const singleEntries = loadDictFile(SINGLE_DICT).data;
+  const singleDict = loadDictFile(SINGLE_DICT);
+  const lookup = buildLookup(singleDict.data);
   const phraseLookup = buildPhraseLookup(loadDictFile(PHRASE_DICT).data);
-  const index = buildSingleIndex(singleEntries);
 
   let charInfos;
   try {
-    charInfos = lookupCharInfos(chars, pinyins, { singleEntries, index });
+    charInfos = lookupCharInfos(chars, pinyins, { lookup });
   } catch (err) {
     if (err.message === 'CHAR_NOT_FOUND') {
       console.error(`  [错误] 未找到 "${err.char}" 对应拼音 ${err.pinyin} 的条目`);
@@ -272,7 +236,7 @@ function main() {
   }
 
   console.log('\n=== 步骤2: 查单字字典取形码 ===');
-  console.log(`  单字字典条目数: ${singleEntries.length}`);
+  console.log(`  单字字典条目数: ${singleDict.data.length}`);
   for (let i = 0; i < chars.length; i++) {
     for (const fc of charInfos[i]) {
       const sp = fc.slice(0, 2);
@@ -320,7 +284,7 @@ function main() {
 
 export {
   buildPhraseLookup,
-  buildSingleIndex,
+  buildLookup,
   lookupCharInfos,
   generateCodes,
   getAllValidCodes,

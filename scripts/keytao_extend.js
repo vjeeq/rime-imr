@@ -5,7 +5,7 @@ const rime = require('./rime.ts');
 
 const {
   buildPhraseLookup,
-  buildSingleIndex,
+  buildLookup,
   lookupCharInfos,
   generateCodes,
   getAllValidCodes,
@@ -171,9 +171,8 @@ function main() {
   const phraseFull = readDictFull(PHRASE_DICT);
   console.log(`  词组词典条目: ${phraseFull.entries.length}`);
 
-  const singleEntries = rime.loadDictFile(ZI_DICT).data;
-  const singleIndex = buildSingleIndex(singleEntries);
-  const dicts = { singleEntries, phraseLookup: buildPhraseLookup(phraseFull.entries), index: singleIndex };
+  const lookup = buildLookup(rime.loadDictFile(ZI_DICT).data);
+  const dicts = { lookup, phraseLookup: buildPhraseLookup(phraseFull.entries) };
 
   console.log('\n=== 步骤3: 校验编码合法性 ===');
   let hasError = false;
@@ -330,7 +329,7 @@ function main() {
         continue;
       }
 
-      const allCodes = getAllValidCodes(conflictText, singleEntries, singleIndex);
+      const allCodes = getAllValidCodes(conflictText, lookup);
       if (allCodes.length === 0) {
         const msg = `"${conflictText}" 在单字字典中无匹配条目 (因 "${me.text}" 冲突)`;
         console.error(`    [错误] ${msg}`);
