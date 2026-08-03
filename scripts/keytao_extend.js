@@ -6,7 +6,8 @@ const rime = require('./rime.ts');
 const {
   buildPhraseLookup,
   buildSingleIndex,
-  checkPhrase,
+  lookupCharInfos,
+  generateCodes,
   getAllValidCodes,
   pinyinToShuangpin,
 } = require('./keytao.ts');
@@ -179,12 +180,12 @@ function main() {
   for (const e of myEntries) {
     if (e.weight === 0) continue;
     try {
-      const result = checkPhrase(e.chars, e.pinyins, dicts);
-      if (!result.codes.includes(e.code)) {
+      const codes = generateCodes(lookupCharInfos(e.chars, e.pinyins, dicts));
+      if (!codes.includes(e.code)) {
         const msg = `${e.file}:${e.line} "${e.text}" 编码 "${e.code}" 不符合规则`;
         console.error(`  [错误] ${msg}`);
-        console.error(`         合法候选: ${result.codes.join(', ')}`);
-        errors.push({ summary: msg, detail: `合法候选: ${result.codes.join(', ')}` });
+        console.error(`         合法候选: ${codes.join(', ')}`);
+        errors.push({ summary: msg, detail: `合法候选: ${codes.join(', ')}` });
         hasError = true;
       }
     } catch (err) {

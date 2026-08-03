@@ -134,7 +134,7 @@ function findCharShapeCodes(singleEntries, char, spCodes, index) {
 
 /**
  * 
- * @param chars chars[i] = [第i+1个字的全码]
+ * @param chars 词的字全码 chars[i] = [第i+1个字的全码]
  * @returns 词的所有编码
  */
 function generateCodes(chars: string[][]) {
@@ -184,19 +184,13 @@ function buildPhraseLookup(phraseEntries) {
   return map;
 }
 
-function checkPhrase(chars, pinyins, dicts) {
+function lookupCharInfos(chars, pinyins, dicts) {
   const singleEntries = (dicts && dicts.singleEntries) || loadDictFile(SINGLE_DICT).data;
-  const phraseLookup = (dicts && dicts.phraseLookup) || buildPhraseLookup(loadDictFile(PHRASE_DICT).data);
   const index = dicts && dicts.index;
-
-  const allSpOptions = [];
-  for (let i = 0; i < chars.length; i++) {
-    allSpOptions.push(pinyinToShuangpin(pinyins[i]));
-  }
 
   const charInfos = [];
   for (let i = 0; i < chars.length; i++) {
-    const variants = findCharShapeCodes(singleEntries, chars[i], allSpOptions[i], index);
+    const variants = findCharShapeCodes(singleEntries, chars[i], pinyinToShuangpin(pinyins[i]), index);
     if (variants.length === 0) {
       const err = new Error('CHAR_NOT_FOUND');
       err.char = chars[i];
@@ -206,31 +200,7 @@ function checkPhrase(chars, pinyins, dicts) {
     }
     charInfos.push(variants);
   }
-
-  const codes = generateCodes(charInfos);
-
-  const conflicts = [];
-  const available = [];
-  for (const code of codes) {
-    if (phraseLookup.has(code)) {
-      conflicts.push({ code, texts: phraseLookup.get(code) });
-    } else {
-      available.push(code);
-    }
-  }
-
-  return {
-    phrase: chars.join(''),
-    wordLen: chars.length,
-    charInfos,
-    codes,
-    conflicts,
-    available,
-    dictStats: {
-      singleEntries: singleEntries.length,
-      phraseEntries: phraseLookup.size,
-    },
-  };
+  return charInfos;
 }
 
 function getAllValidCodes(text, singleEntries, index) {
@@ -286,9 +256,13 @@ function main() {
     console.log(`  ${chars[i]} (${pinyins[i]}) -> ${spCodes.join(', ')}`);
   }
 
-  let result;
+  const singleEntries = loadDictFile(SINGLE_DICT).data;
+  const phraseLookup = buildPhraseLookup(loadDictFile(PHRASE_DICT).data);
+  const index = buildSingleIndex(singleEntries);
+
+  let charInfos;
   try {
-    result = checkPhrase(chars, pinyins);
+    charInfos = lookupCharInfos(chars, pinyins, { singleEntries, index });
   } catch (err) {
     if (err.message === 'CHAR_NOT_FOUND') {
       console.error(`  [错误] 未找到 "${err.char}" 对应拼音 ${err.pinyin} 的条目`);
@@ -298,36 +272,48 @@ function main() {
   }
 
   console.log('\n=== 步骤2: 查单字字典取形码 ===');
-  console.log(`  单字字典条目数: ${result.dictStats.singleEntries}`);
+  console.log(`  单字字典条目数: ${singleEntries.length}`);
   for (let i = 0; i < chars.length; i++) {
-    for (const fc of result.charInfos[i]) {
+    for (const fc of charInfos[i]) {
       const sp = fc.slice(0, 2);
       const shape = fc.slice(2);
       console.log(`  ${chars[i]}: sp="${sp}", 最长码="${fc}", 形码="${shape}", 首形码="${shape[0] || ''}"`);
     }
   }
 
+  const codes = generateCodes(charInfos);
+
   console.log('\n=== 步骤3: 生成候选编码 ===');
-  console.log(`  候选编码 (${result.codes.length}个): ${result.codes.join(', ')}`);
+  console.log(`  候选编码 (${codes.length}个): ${codes.join(', ')}`);
 
   console.log('\n=== 步骤4: 查词组字典 ===');
-  console.log(`  词组字典条目数: ${result.dictStats.phraseEntries}`);
+  console.log(`  词组字典条目数: ${phraseLookup.size}`);
 
-  if (result.conflicts.length > 0) {
+  const conflicts = [];
+  const available = [];
+  for (const code of codes) {
+    if (phraseLookup.has(code)) {
+      conflicts.push({ code, texts: phraseLookup.get(code) });
+    } else {
+      available.push(code);
+    }
+  }
+
+  if (conflicts.length > 0) {
     console.log('\n[冲突] 以下编码已存在于词组字典:');
-    for (const c of result.conflicts) {
+    for (const c of conflicts) {
       console.log(`  ${c.code} -> ${c.texts.join(', ')}`);
     }
   }
 
-  if (result.available.length > 0) {
+  if (available.length > 0) {
     console.log('\n[可用] 以下编码不存在于词组字典:');
-    for (const c of result.available) {
+    for (const c of available) {
       console.log(`  ${c}`);
     }
   }
 
-  if (result.conflicts.length === 0 && result.available.length === 0) {
+  if (conflicts.length === 0 && available.length === 0) {
     console.log('\n[结果] 无候选编码生成');
   }
 }
@@ -335,7 +321,8 @@ function main() {
 export {
   buildPhraseLookup,
   buildSingleIndex,
-  checkPhrase,
+  lookupCharInfos,
+  generateCodes,
   getAllValidCodes,
   pinyinToShuangpin,
 };
