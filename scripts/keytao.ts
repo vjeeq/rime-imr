@@ -1,6 +1,6 @@
-import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { loadDictFile } from './rime.ts';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const BASE_DIR = path.join(__dirname, '..', 'dicts', 'keytao');
@@ -82,28 +82,6 @@ function pinyinToShuangpin(pinyin: string): string[] {
         return [(sheng === 'sh' ? 'e' : sheng) + YINPIN_MAP[yun]];
       }
   }
-}
-
-function parseDict(filePath: string) {
-  const content = fs.readFileSync(filePath, 'utf-8');
-  const lines = content.split('\n');
-  const entries = [];
-  let inBody = false;
-
-  for (const line of lines) {
-    if (!inBody) {
-      if (line.trim() === '...') { inBody = true; }
-      continue;
-    }
-    if (line.trim() === '') continue;
-    if (line.trim().startsWith('#')) continue;
-    const parts = line.split('\t');
-    if (parts.length >= 2) {
-      entries.push({ text: parts[0].trim(), code: parts[1].trim() });
-    }
-  }
-
-  return entries;
 }
 
 function buildSingleIndex(singleEntries) {
@@ -207,8 +185,8 @@ function buildPhraseLookup(phraseEntries) {
 }
 
 function checkPhrase(chars, pinyins, dicts) {
-  const singleEntries = (dicts && dicts.singleEntries) || parseDict(SINGLE_DICT);
-  const phraseLookup = (dicts && dicts.phraseLookup) || buildPhraseLookup(parseDict(PHRASE_DICT));
+  const singleEntries = (dicts && dicts.singleEntries) || loadDictFile(SINGLE_DICT).data;
+  const phraseLookup = (dicts && dicts.phraseLookup) || buildPhraseLookup(loadDictFile(PHRASE_DICT).data);
   const index = dicts && dicts.index;
 
   const allSpOptions = [];
@@ -355,7 +333,6 @@ function main() {
 }
 
 export {
-  parseDict,
   buildPhraseLookup,
   buildSingleIndex,
   checkPhrase,

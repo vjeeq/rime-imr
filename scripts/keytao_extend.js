@@ -1,8 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 
+const rime = require('./rime.ts');
+
 const {
-  parseDict,
   buildPhraseLookup,
   buildSingleIndex,
   checkPhrase,
@@ -16,88 +17,43 @@ const USER_DIR = path.join(__dirname, '..', 'dicts', 'keytao', 'imr');
 const OUT_DICT = path.join(__dirname, '..', 'dicts', 'keytao', 'keytao.extended.dict.yaml');
 
 function readDictFull(filePath) {
-  const content = fs.readFileSync(filePath, 'utf-8');
-  const lines = content.split('\n');
-
-  let headerEnd = 0;
-  for (let i = 0; i < lines.length; i++) {
-    if (lines[i].trim() === '...') {
-      headerEnd = i + 1;
-      break;
-    }
-  }
-  const header = lines.slice(0, headerEnd).join('\n');
-
-  const entries = [];
-  for (let i = headerEnd; i < lines.length; i++) {
-    const line = lines[i];
-    if (line.trim() === '' || line.trim().startsWith('#')) continue;
-    const parts = line.split('\t');
-    if (parts.length >= 2) {
-      entries.push({
-        text: parts[0].trim(),
-        code: parts[1].trim(),
-        weight: parts.length >= 3 ? parts[2].trim() : '100',
-      });
-    }
-  }
-
-  return { header, entries };
+  const dict = rime.loadDictFile(filePath);
+  return { header: dict.header, entries: dict.data };
 }
 
 function parseMyDict(filePath, warnings, errors) {
-  const content = fs.readFileSync(filePath, 'utf-8');
-  const lines = content.split('\n');
-  const entries = [];
-  let inBody = false;
   const fileName = path.basename(filePath);
+  const dict = rime.loadDictFile(filePath);
+  const entries = [];
 
-  for (let lineno = 0; lineno < lines.length; lineno++) {
-    const line = lines[lineno];
-    if (!inBody) {
-      if (line.trim() === '...') { inBody = true; }
-      continue;
-    }
-    const trimmed = line.trim();
-    if (trimmed === '' || trimmed.startsWith('#')) continue;
-
-    const parts = line.split('\t');
-    if (parts.length < 4) {
-      errors.push({ summary: `${fileName}:${lineno + 1} 格式不正确 (缺字段, 需4列)` });
-      continue;
-    }
-
-    const text = parts[0].trim();
-    const pinyins = parts[1].trim().split(/\s+/);
-    const code = parts[2].trim();
-    const weight = parseInt(parts[3].trim(), 10);
+  for (const row of dict.data) {
+    const { text, code, weight, stem, _line: line } = row;
+    const chars = [...text];
+    const pinyins = (stem || '').split(/\s+/);
 
     if (pinyins.length < 1 || pinyins[0] === '') {
-      errors.push({ summary: `${fileName}:${lineno + 1} "${text}" stem 列为空` });
+      errors.push({ summary: `${fileName}:${line} "${text}" stem 列为空` });
       continue;
     }
 
     if (weight === 0) {
-      const chars = [...text];
-      entries.push({ text, chars, pinyins: chars.map(() => ''), code, weight: 0, file: fileName, line: lineno + 1 });
+      entries.push({ text, chars, pinyins: chars.map(() => ''), code, weight: 0, file: fileName, line });
       continue;
     }
 
     if (!isWeight100(weight) && !isWeight1000(weight)) {
-      errors.push({ summary: `${fileName}:${lineno + 1} "${text}" 权重不在有效范围` });
+      errors.push({ summary: `${fileName}:${line} "${text}" 权重不在有效范围` });
       continue;
     }
 
-    const chars = [...text];
-
     if (pinyins.length !== chars.length) {
       errors.push({
-        summary: `${fileName}:${lineno + 1} "${text}" 拼音数量(${pinyins.length})与字数(${chars.length})不匹配`,
+        summary: `${fileName}:${line} "${text}" 拼音数量(${pinyins.length})与字数(${chars.length})不匹配`,
       });
       continue;
     }
 
-    entries.push({ text, chars, pinyins, code, weight, file: fileName, line: lineno + 1 });
+    entries.push({ text, chars, pinyins, code, weight, file: fileName, line });
   }
 
   return entries;
@@ -214,7 +170,7 @@ function main() {
   const phraseFull = readDictFull(PHRASE_DICT);
   console.log(`  词组词典条目: ${phraseFull.entries.length}`);
 
-  const singleEntries = parseDict(ZI_DICT);
+  const singleEntries = rime.loadDictFile(ZI_DICT).data;
   const singleIndex = buildSingleIndex(singleEntries);
   const dicts = { singleEntries, phraseLookup: buildPhraseLookup(phraseFull.entries), index: singleIndex };
 
