@@ -8,6 +8,10 @@ const SINGLE_DICT = path.join(BASE_DIR, 'keytao.single.dict.yaml');
 const PHRASE_DICT = path.join(BASE_DIR, 'keytao.phrase.dict.yaml');
 
 type DictLookup = Record<string, string[]>;
+type DictIndex = {
+  textToCodes: DictLookup;
+  codeToTexts: DictLookup;
+};
 
 const YINPIN_MAP: Record<string, string> = {
   iu: 'q', ua: 'q',
@@ -86,14 +90,21 @@ function pinyinToShuangpin(pinyin: string): string[] {
   }
 }
 
-function buildLookup(data: Dict['data']): DictLookup {
-  const lookup: DictLookup = {};
-  for (const e of data) (lookup[e.text] ||= []).push(e.code);
-  for (const ch of Object.keys(lookup)) {
-    const maxLen = Math.max(...lookup[ch].map(c => c.length));
-    lookup[ch] = lookup[ch].filter(c => c.length === maxLen);
+function buildLookup(data: Dict<['text', 'code']>['data']): DictIndex {
+  const textToCodes: DictLookup = {};
+  const codeToTexts: DictLookup = {};
+  for (const entry of data) {
+    (textToCodes[entry.text] ||= []).push(entry.code);
+    (codeToTexts[entry.code] ||= []).push(entry.text);
   }
-  return lookup;
+  for (const text of Object.keys(textToCodes)) {
+    const maxLen = Math.max(...textToCodes[text].map(c => c.length));
+    textToCodes[text] = textToCodes[text].filter(c => c.length === maxLen);
+  }
+  for (const code of Object.keys(codeToTexts)) {
+    codeToTexts[code] = [...new Set(codeToTexts[code])];
+  }
+  return { textToCodes, codeToTexts };
 }
 
 function findCharShapeCodes(lookup, char, spCodes) {
@@ -147,22 +158,8 @@ function generateCodes(chars: string[][]) {
   }))];
 }
 
-function buildPhraseLookup(phraseEntries) {
-  const map = new Map();
-  for (const entry of phraseEntries) {
-    if (!map.has(entry.code)) {
-      map.set(entry.code, []);
-    }
-    map.get(entry.code).push(entry.text);
-  }
-  for (const [k, v] of map) {
-    map.set(k, [...new Set(v)]);
-  }
-  return map;
-}
-
 function lookupCharInfos(chars, pinyins, dicts) {
-  const lookup = (dicts && dicts.lookup) || buildLookup(loadDictFile(SINGLE_DICT).data);
+  const lookup = (dicts && dicts.lookup) || buildLookup(loadDictFile(SINGLE_DICT).data).textToCodes;
 
   const charInfos = [];
   for (let i = 0; i < chars.length; i++) {
@@ -221,12 +218,12 @@ function main() {
   }
 
   const singleDict = loadDictFile(SINGLE_DICT);
-  const lookup = buildLookup(singleDict.data);
-  const phraseLookup = buildPhraseLookup(loadDictFile(PHRASE_DICT).data);
+  const singleIdx = buildLookup(singleDict.data);
+  const phraseIdx = buildLookup(loadDictFile(PHRASE_DICT).data);
 
   let charInfos;
   try {
-    charInfos = lookupCharInfos(chars, pinyins, { lookup });
+    charInfos = lookupCharInfos(chars, pinyins, { lookup: singleIdx.textToCodes });
   } catch (err) {
     if (err.message === 'CHAR_NOT_FOUND') {
       console.error(`  [错误] 未找到 "${err.char}" 对应拼音 ${err.pinyin} 的条目`);
@@ -251,13 +248,14 @@ function main() {
   console.log(`  候选编码 (${codes.length}个): ${codes.join(', ')}`);
 
   console.log('\n=== 步骤4: 查词组字典 ===');
-  console.log(`  词组字典条目数: ${phraseLookup.size}`);
+  console.log(`  词组字典条目数: ${Object.keys(phraseIdx.codeToTexts).length}`);
 
   const conflicts = [];
   const available = [];
   for (const code of codes) {
-    if (phraseLookup.has(code)) {
-      conflicts.push({ code, texts: phraseLookup.get(code) });
+    const texts = phraseIdx.codeToTexts[code];
+    if (texts) {
+      conflicts.push({ code, texts });
     } else {
       available.push(code);
     }
@@ -283,7 +281,6 @@ function main() {
 }
 
 export {
-  buildPhraseLookup,
   buildLookup,
   lookupCharInfos,
   generateCodes,

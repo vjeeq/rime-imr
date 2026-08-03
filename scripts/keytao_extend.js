@@ -4,7 +4,6 @@ const path = require('path');
 const rime = require('./rime.ts');
 
 const {
-  buildPhraseLookup,
   buildLookup,
   lookupCharInfos,
   generateCodes,
@@ -171,8 +170,10 @@ function main() {
   const phraseFull = readDictFull(PHRASE_DICT);
   console.log(`  词组词典条目: ${phraseFull.entries.length}`);
 
-  const lookup = buildLookup(rime.loadDictFile(ZI_DICT).data);
-  const dicts = { lookup, phraseLookup: buildPhraseLookup(phraseFull.entries) };
+  const dicts = {
+    lookup: buildLookup(rime.loadDictFile(ZI_DICT).data).textToCodes,
+    phraseLookup: buildLookup(phraseFull.entries).codeToTexts,
+  };
 
   console.log('\n=== 步骤3: 校验编码合法性 ===');
   let hasError = false;
@@ -329,7 +330,7 @@ function main() {
         continue;
       }
 
-      const allCodes = getAllValidCodes(conflictText, lookup);
+      const allCodes = getAllValidCodes(conflictText, dicts.lookup);
       if (allCodes.length === 0) {
         const msg = `"${conflictText}" 在单字字典中无匹配条目 (因 "${me.text}" 冲突)`;
         console.error(`    [错误] ${msg}`);
@@ -353,7 +354,7 @@ function main() {
       let resolved = false;
       const blockedBy = [];
       for (const cand of candidates) {
-        const entryTexts = codes1000Set.has(cand) ? [] : (dicts.phraseLookup.get(cand) || []);
+        const entryTexts = codes1000Set.has(cand) ? [] : (dicts.phraseLookup[cand] || []);
         const unresolvable = [...new Set(
           entryTexts.filter(text => !texts1000.has(text))
         )];
