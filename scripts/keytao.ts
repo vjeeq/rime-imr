@@ -1,6 +1,8 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const BASE_DIR = path.join(__dirname, '..', 'dicts', 'keytao');
 const SINGLE_DICT = path.join(BASE_DIR, 'keytao.single.dict.yaml');
 const PHRASE_DICT = path.join(BASE_DIR, 'keytao.phrase.dict.yaml');
@@ -158,7 +160,6 @@ function findCharShapeCodes(singleEntries, char, spCodes, index) {
  * @returns 词的所有编码
  */
 function generateCodes(chars: string[][]) {
-  console.log(chars)
   const combos: string[][] = chars.reduce<string[][]>(
     (acc, curr) => acc.flatMap((c) => curr.map((v) => [...c, v])),
     [[]]
@@ -229,7 +230,6 @@ function checkPhrase(chars, pinyins, dicts) {
   }
 
   const codes = generateCodes(charInfos);
-  console.log(codes)
 
   const conflicts = [];
   const available = [];
@@ -354,7 +354,7 @@ function main() {
   }
 }
 
-module.exports = {
+export {
   parseDict,
   buildPhraseLookup,
   buildSingleIndex,
@@ -363,6 +363,6 @@ module.exports = {
   pinyinToShuangpin,
 };
 
-if (require.main === module) {
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   main();
 }
