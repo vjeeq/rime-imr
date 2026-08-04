@@ -12,8 +12,13 @@ type DictIndex = {
   textToCodes: DictLookup;
   codeToTexts: DictLookup;
 };
-
-const YINPIN_MAP: Record<string, string> = {
+const SHENG_MAP: Record<string, string> = {
+  '': 'x',
+  // zh: 'f', zh: 'q',
+  // ch: 'j', ch: 'w',
+  sh: 'e',
+}
+const YUN_MAP: Record<string, string> = {
   iu: 'q', ua: 'q',
   ei: 'w', un: 'w',
   e: 'e',
@@ -51,41 +56,38 @@ function pinyinToShuangpin(pinyin: string): string[] {
     pinyin = pinyin.replace('u', 'v');
   }
   const [_, sheng, yun] = pinyin.match(/^([zcs]h|[bpmfdtnlgkhjqxrzcsyw]?)(.*)/) as RegExpMatchArray;
+  const sheng_code = SHENG_MAP[sheng] ?? sheng;
+  const yun_code = YUN_MAP[yun] ?? yun;
   switch (sheng) {
-    case '':
-      return ['x' + YINPIN_MAP[yun]];
     case 'zh':
       if (ZH_Q.has(yun)) {
-        return ['q' + YINPIN_MAP[yun]];
+        return ['q' + yun_code];
       }
       if (ZH_F.has(yun)) {
         if (yun === 'uang') {
           return ['fm', 'fx'];
         } else {
-          return ['f' + YINPIN_MAP[yun]];
+          return ['f' + yun_code];
         }
       }
-      return ['f' + YINPIN_MAP[yun], 'q' + YINPIN_MAP[yun]];
+      return ['f' + yun_code, 'q' + yun_code];
     case 'ch':
       if (CH_J.has(yun)) {
-        return ['j' + YINPIN_MAP[yun]];
+        return ['j' + yun_code];
       }
       if (CH_W.has(yun)) {
         if (yun === 'uang') {
           return ['wm', 'wx'];
         } else {
-          return ['w' + YINPIN_MAP[yun]];
+          return ['w' + yun_code];
         }
       }
-      return ['j' + YINPIN_MAP[yun], 'w' + YINPIN_MAP[yun]];
+      return ['j' + yun_code, 'w' + yun_code];
     default:
       if (yun === 'uang') {
-        return [
-          (sheng === 'sh' ? 'e' : sheng) + 'm',
-          (sheng === 'sh' ? 'e' : sheng) + 'x'
-        ];
+        return [sheng_code + 'm', sheng_code + 'x'];
       } else {
-        return [(sheng === 'sh' ? 'e' : sheng) + YINPIN_MAP[yun]];
+        return [sheng_code + yun_code];
       }
   }
 }
