@@ -6,19 +6,20 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const BASE_DIR = path.join(__dirname, '..', 'dicts', 'keytao');
 const SINGLE_DICT = path.join(BASE_DIR, 'keytao.single.dict.yaml');
 const PHRASE_DICT = path.join(BASE_DIR, 'keytao.phrase.dict.yaml');
-
 type DictLookup = Record<string, string[]>;
 type DictIndex = {
   text2codes: DictLookup;
   code2texts: DictLookup;
 };
-const SHENG_MAP: Record<string, string> = {
+type CharColumn = 'text' | 'pinyin' | 'code' | 'scode' | 'bcode';
+type Char<C extends CharColumn[]> = { [K in C[number]]: string };
+const S1_MAP: Record<string, string> = {
   '': 'x',
   // zh: 'f', zh: 'q',
   // ch: 'j', ch: 'w',
   sh: 'e',
 }
-const YUN_MAP: Record<string, string> = {
+const S2_MAP: Record<string, string> = {
   iu: 'q', ua: 'q',
   ei: 'w', un: 'w',
   e: 'e',
@@ -51,43 +52,43 @@ const CH_J = new Set(['ai', 'an', 'ang', 'en', 'eng', 'u', 'un']);
 const CH_W = new Set(['a', 'i', 'ong', 'ou', 'ua', 'uai', 'uan', 'uang', 'ui', 'uo']);
 const CH_JW = new Set(['ao', 'e']);
 
-function pinyinToShuangpin(pinyin: string): string[] {
+function pinyin2scode(pinyin: string): string[] {
   if (pinyin.match(/^[jqxy]u$/)) {
     pinyin = pinyin.replace('u', 'v');
   }
-  const [_, sheng, yun] = pinyin.match(/^([zcs]h|[bpmfdtnlgkhjqxrzcsyw]?)(.*)/) as RegExpMatchArray;
-  const sheng_code = SHENG_MAP[sheng] ?? sheng;
-  const yun_code = YUN_MAP[yun] ?? yun;
-  switch (sheng) {
+  const [_, s1, s2] = pinyin.match(/^([zcs]h|[bpmfdtnlgkhjqxrzcsyw]?)(.*)/) as RegExpMatchArray;
+  const s1_code = S1_MAP[s1] ?? s1;
+  const s2_code = S2_MAP[s2] ?? s2;
+  switch (s1) {
     case 'zh':
-      if (ZH_Q.has(yun)) {
-        return ['q' + yun_code];
+      if (ZH_Q.has(s2)) {
+        return ['q' + s2_code];
       }
-      if (ZH_F.has(yun)) {
-        if (yun === 'uang') {
+      if (ZH_F.has(s2)) {
+        if (s2 === 'uang') {
           return ['fm', 'fx'];
         } else {
-          return ['f' + yun_code];
+          return ['f' + s2_code];
         }
       }
-      return ['f' + yun_code, 'q' + yun_code];
+      return ['f' + s2_code, 'q' + s2_code];
     case 'ch':
-      if (CH_J.has(yun)) {
-        return ['j' + yun_code];
+      if (CH_J.has(s2)) {
+        return ['j' + s2_code];
       }
-      if (CH_W.has(yun)) {
-        if (yun === 'uang') {
+      if (CH_W.has(s2)) {
+        if (s2 === 'uang') {
           return ['wm', 'wx'];
         } else {
-          return ['w' + yun_code];
+          return ['w' + s2_code];
         }
       }
-      return ['j' + yun_code, 'w' + yun_code];
+      return ['j' + s2_code, 'w' + s2_code];
     default:
-      if (yun === 'uang') {
-        return [sheng_code + 'm', sheng_code + 'x'];
+      if (s2 === 'uang') {
+        return [s1_code + 'm', s1_code + 'x'];
       } else {
-        return [sheng_code + yun_code];
+        return [s1_code + s2_code];
       }
   }
 }
@@ -109,13 +110,13 @@ function buildLookup(data: Dict<['text', 'code']>['data']): DictIndex {
   return { text2codes: textToCodes, code2texts: codeToTexts };
 }
 
-function findCharShapeCodes(text2codes: DictLookup, char: string, double_pinyin: string[]) {
-  const codes = text2codes[char] || [];
+function findCharShapeCodes(text2codes: DictLookup, text: string, scode: string[]) {
+  const codes = text2codes[text] || [];
   const result = [];
-  for (const sp of double_pinyin) {
+  for (const s_code of scode) {
     let longest = '';
     for (const code of codes) {
-      if (code.startsWith(sp) && code.length > longest.length) longest = code;
+      if (code.startsWith(s_code) && code.length > longest.length) longest = code;
     }
     if (longest) result.push(longest);
   }
@@ -124,16 +125,16 @@ function findCharShapeCodes(text2codes: DictLookup, char: string, double_pinyin:
 
 /**
  * 
- * @param chars 词的字全码 chars[i] = [第i+1个字的全码]
+ * @param codes 词的字全码 codes[i] = [第i+1个字的全码]
  * @returns 词的所有编码
  */
-function generateCodes(chars: string[][]) {
-  const combos: string[][] = chars.reduce<string[][]>(
+function generateCodes(codes: string[][]): string[] {
+  const combos: string[][] = codes.reduce<string[][]>(
     (acc, curr) => acc.flatMap((c) => curr.map((v) => [...c, v])),
     [[]]
   );
   return [... new Set(combos.flatMap(combo => {
-    switch (chars.length) {
+    switch (codes.length) {
       case 2:
         const base2: string = combo[0].slice(0, 2) + combo[1].slice(0, 2);
         return [
@@ -160,13 +161,14 @@ function generateCodes(chars: string[][]) {
   }))];
 }
 
-function lookupCharInfos(chars: string[], pinyins: string[], text2codes: DictLookup) {
+function lookupCharInfos(chars: Char<['text', 'pinyin']>[], text2codes: DictLookup) {
   const charInfos = [];
   for (let i = 0; i < chars.length; i++) {
-    const variants = findCharShapeCodes(text2codes, chars[i], pinyinToShuangpin(pinyins[i]));
+    const { text, pinyin } = chars[i];
+    const variants = findCharShapeCodes(text2codes, text, pinyin2scode(pinyin));
     if (variants.length === 0) {
       throw Object.assign(new Error('CHAR_NOT_FOUND'), {
-        char: chars[i], pinyin: pinyins[i], index: i + 1,
+        char: text, pinyin, index: i + 1,
       });
     }
     charInfos.push(variants);
@@ -208,10 +210,8 @@ function main() {
   console.log('');
 
   console.log('=== 步骤1: 拼音转键道双拼 ===');
-  const allSpOptions = [];
   for (let i = 0; i < chars.length; i++) {
-    const spCodes = pinyinToShuangpin(pinyins[i]);
-    allSpOptions.push(spCodes);
+    const spCodes = pinyin2scode(pinyins[i]);
     console.log(`  ${chars[i]} (${pinyins[i]}) -> ${spCodes.join(', ')}`);
   }
 
@@ -219,9 +219,10 @@ function main() {
   const singleIdx = buildLookup(singleDict.data);
   const phraseIdx = buildLookup(loadDictFile(PHRASE_DICT).data);
 
+  const charList = chars.map((text, i) => ({ text, pinyin: pinyins[i] }));
   let charInfos;
   try {
-    charInfos = lookupCharInfos(chars, pinyins, singleIdx.text2codes);
+    charInfos = lookupCharInfos(charList, singleIdx.text2codes);
   } catch (err) {
     if (err.message === 'CHAR_NOT_FOUND') {
       console.error(`  [错误] 未找到 "${err.char}" 对应拼音 ${err.pinyin} 的条目`);
@@ -283,7 +284,7 @@ export {
   lookupCharInfos,
   generateCodes,
   getAllValidCodes,
-  pinyinToShuangpin,
+  pinyin2scode as pinyinToShuangpin,
 };
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

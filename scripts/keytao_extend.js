@@ -180,7 +180,8 @@ function main() {
   for (const e of myEntries) {
     if (e.weight === 0) continue;
     try {
-      const codes = generateCodes(lookupCharInfos(e.chars, e.pinyins, dicts.lookup));
+      const charList = e.chars.map((c, i) => ({ text: c, pinyin: e.pinyins[i] }));
+      const codes = generateCodes(lookupCharInfos(charList, dicts.lookup));
       if (!codes.includes(e.code)) {
         const msg = `${e.file}:${e.line} "${e.text}" 编码 "${e.code}" 不符合规则`;
         console.error(`  [错误] ${msg}`);
