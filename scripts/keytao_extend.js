@@ -171,8 +171,8 @@ function main() {
   console.log(`  词组词典条目: ${phraseFull.entries.length}`);
 
   const dicts = {
-    lookup: buildLookup(rime.loadDictFile(ZI_DICT).data).textToCodes,
-    phraseLookup: buildLookup(phraseFull.entries).codeToTexts,
+    lookup: buildLookup(rime.loadDictFile(ZI_DICT).data).text2codes,
+    phraseLookup: buildLookup(phraseFull.entries).code2texts,
   };
 
   console.log('\n=== 步骤3: 校验编码合法性 ===');
@@ -180,7 +180,7 @@ function main() {
   for (const e of myEntries) {
     if (e.weight === 0) continue;
     try {
-      const codes = generateCodes(lookupCharInfos(e.chars, e.pinyins, dicts));
+      const codes = generateCodes(lookupCharInfos(e.chars, e.pinyins, dicts.lookup));
       if (!codes.includes(e.code)) {
         const msg = `${e.file}:${e.line} "${e.text}" 编码 "${e.code}" 不符合规则`;
         console.error(`  [错误] ${msg}`);
