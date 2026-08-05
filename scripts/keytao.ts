@@ -11,8 +11,6 @@ type DictIndex = {
   text2codes: DictLookup;
   code2texts: DictLookup;
 };
-type CharColumn = 'text' | 'pinyin' | 'code' | 'scode' | 'bcode';
-type Char<C extends CharColumn[]> = { [K in C[number]]: string };
 const S1_MAP: Record<string, string> = {
   '': 'x',
   // zh: 'f', zh: 'q',
@@ -161,30 +159,40 @@ function generateCodes(codes: string[][]): string[] {
   }))];
 }
 
-function lookupCharInfos(chars: Char<['text', 'pinyin']>[], text2codes: DictLookup) {
-  const charInfos = [];
-  for (let i = 0; i < chars.length; i++) {
-    const { text, pinyin } = chars[i];
-    const variants = findCharShapeCodes(text2codes, text, pinyin2scode(pinyin));
-    if (variants.length === 0) {
-      throw Object.assign(new Error('CHAR_NOT_FOUND'), {
-        char: text, pinyin, index: i + 1,
-      });
-    }
-    charInfos.push(variants);
-  }
-  return charInfos;
-}
+class Keytao {
+  singleDict: Dict;
+  singleIdx: DictIndex;
 
-function getAllValidCodes(text, lookup) {
-  const chars = [...text];
-  const charVariants = [];
-  for (const ch of chars) {
-    const codes = lookup[ch];
-    if (!codes) return [];
-    charVariants.push(codes);
+  constructor() {
+    this.singleDict = loadDictFile(SINGLE_DICT);
+    this.singleIdx = buildLookup(loadDictFile(SINGLE_DICT).data);
   }
-  return generateCodes(charVariants);
+
+  lookupCharInfos(chars: { text: string, pinyin: string }[]) {
+    const charInfos = [];
+    for (let i = 0; i < chars.length; i++) {
+      const { text, pinyin } = chars[i];
+      const variants = findCharShapeCodes(this.singleIdx.text2codes, text, pinyin2scode(pinyin));
+      if (variants.length === 0) {
+        throw Object.assign(new Error('CHAR_NOT_FOUND'), {
+          char: text, pinyin, index: i + 1,
+        });
+      }
+      charInfos.push(variants);
+    }
+    return charInfos;
+  }
+
+  getAllValidCodes(text: string) {
+    const chars = [...text];
+    const charVariants = [];
+    for (const ch of chars) {
+      const codes = this.singleIdx.text2codes[ch];
+      if (!codes) return [];
+      charVariants.push(codes);
+    }
+    return generateCodes(charVariants);
+  }
 }
 
 function main() {
@@ -215,14 +223,13 @@ function main() {
     console.log(`  ${chars[i]} (${pinyins[i]}) -> ${spCodes.join(', ')}`);
   }
 
-  const singleDict = loadDictFile(SINGLE_DICT);
-  const singleIdx = buildLookup(singleDict.data);
+  const kt = new Keytao();
   const phraseIdx = buildLookup(loadDictFile(PHRASE_DICT).data);
 
   const charList = chars.map((text, i) => ({ text, pinyin: pinyins[i] }));
   let charInfos;
   try {
-    charInfos = lookupCharInfos(charList, singleIdx.text2codes);
+    charInfos = kt.lookupCharInfos(charList);
   } catch (err) {
     if (err.message === 'CHAR_NOT_FOUND') {
       console.error(`  [错误] 未找到 "${err.char}" 对应拼音 ${err.pinyin} 的条目`);
@@ -232,7 +239,7 @@ function main() {
   }
 
   console.log('\n=== 步骤2: 查单字字典取形码 ===');
-  console.log(`  单字字典条目数: ${singleDict.data.length}`);
+  console.log(`  单字字典条目数: ${kt.singleDict.data.length}`);
   for (let i = 0; i < chars.length; i++) {
     for (const fc of charInfos[i]) {
       const sp = fc.slice(0, 2);
@@ -280,10 +287,9 @@ function main() {
 }
 
 export {
+  Keytao,
   buildLookup,
-  lookupCharInfos,
   generateCodes,
-  getAllValidCodes,
   pinyin2scode as pinyinToShuangpin,
 };
 

@@ -4,14 +4,12 @@ const path = require('path');
 const rime = require('./rime.ts');
 
 const {
+  Keytao,
   buildLookup,
-  lookupCharInfos,
   generateCodes,
-  getAllValidCodes,
   pinyinToShuangpin,
 } = require('./keytao.ts');
 
-const ZI_DICT = path.join(__dirname, '..', 'dicts', 'keytao', 'keytao.single.dict.yaml');
 const PHRASE_DICT = path.join(__dirname, '..', 'dicts', 'keytao', 'keytao.phrase.dict.yaml');
 const USER_DIR = path.join(__dirname, '..', 'dicts', 'keytao', 'imr');
 const OUT_DICT = path.join(__dirname, '..', 'dicts', 'keytao', 'keytao.extended.dict.yaml');
@@ -170,10 +168,8 @@ function main() {
   const phraseFull = readDictFull(PHRASE_DICT);
   console.log(`  词组词典条目: ${phraseFull.entries.length}`);
 
-  const dicts = {
-    lookup: buildLookup(rime.loadDictFile(ZI_DICT).data).text2codes,
-    phraseLookup: buildLookup(phraseFull.entries).code2texts,
-  };
+  const kt = new Keytao();
+  const phraseLookup = buildLookup(phraseFull.entries).code2texts;
 
   console.log('\n=== 步骤3: 校验编码合法性 ===');
   let hasError = false;
@@ -181,7 +177,7 @@ function main() {
     if (e.weight === 0) continue;
     try {
       const charList = e.chars.map((c, i) => ({ text: c, pinyin: e.pinyins[i] }));
-      const codes = generateCodes(lookupCharInfos(charList, dicts.lookup));
+      const codes = generateCodes(kt.lookupCharInfos(charList));
       if (!codes.includes(e.code)) {
         const msg = `${e.file}:${e.line} "${e.text}" 编码 "${e.code}" 不符合规则`;
         console.error(`  [错误] ${msg}`);
@@ -331,7 +327,7 @@ function main() {
         continue;
       }
 
-      const allCodes = getAllValidCodes(conflictText, dicts.lookup);
+      const allCodes = kt.getAllValidCodes(conflictText);
       if (allCodes.length === 0) {
         const msg = `"${conflictText}" 在单字字典中无匹配条目 (因 "${me.text}" 冲突)`;
         console.error(`    [错误] ${msg}`);
@@ -355,7 +351,7 @@ function main() {
       let resolved = false;
       const blockedBy = [];
       for (const cand of candidates) {
-        const entryTexts = codes1000Set.has(cand) ? [] : (dicts.phraseLookup[cand] || []);
+        const entryTexts = codes1000Set.has(cand) ? [] : (phraseLookup[cand] || []);
         const unresolvable = [...new Set(
           entryTexts.filter(text => !texts1000.has(text))
         )];
