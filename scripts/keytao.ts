@@ -6,6 +6,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const BASE_DIR = path.join(__dirname, '..', 'dicts', 'keytao');
 const SINGLE_DICT = path.join(BASE_DIR, 'keytao.single.dict.yaml');
 const PHRASE_DICT = path.join(BASE_DIR, 'keytao.phrase.dict.yaml');
+const PINYIN_DICT = path.join(__dirname, '..', 'ignored', '配置', 'rime-frost', 'cn_dicts', '8105.dict.yaml');
 type DictLookup = Record<string, string[]>;
 type DictIndex = {
   text2codes: DictLookup;
@@ -91,7 +92,7 @@ function pinyin2scode(pinyin: string): string[] {
   }
 }
 
-function buildLookup(data: Dict<['text', 'code']>['data']): DictIndex {
+function buildLookup(data: Dict<['text', 'code']>['_data']): DictIndex {
   const textToCodes: DictLookup = {};
   const codeToTexts: DictLookup = {};
   for (const entry of data) {
@@ -158,6 +159,70 @@ function generateCodes(codes: string[][]): string[] {
     }
   }))];
 }
+let pinyinIdx: DictLookup | null = null;
+
+function loadPinyinIdx(): DictLookup {
+  if (!pinyinIdx) {
+    const idx: DictLookup = {};
+    for (const entry of loadDictFile(PINYIN_DICT)._data) {
+      (idx[entry.text] ||= []).push(entry.code);
+    }
+    for (const text of Object.keys(idx)) {
+      idx[text] = [...new Set(idx[text])];
+    }
+    pinyinIdx = idx;
+  }
+  return pinyinIdx;
+}
+
+/**
+ * 根据键道编码反查中文的拼音。
+ * @param text 中文词组
+ * @param code 键道编码；为空时返回该字全部读音组合
+ * @returns 能产出该编码的拼音组合（空格分隔）
+ */
+function full_pinyin(text: string, code: string): string[] {
+  const idx = loadPinyinIdx();
+  const chars = [...text];
+  const variants = chars.map(ch => idx[ch] || []);
+  const combos: string[][] = variants.reduce<string[][]>(
+    (acc, curr) => acc.flatMap((c) => curr.map((v) => [...c, v])),
+    [[]]
+  );
+  const results: string[] = [];
+  for (const combo of combos) {
+    if (combo.length !== chars.length) continue;
+    if (code) {
+      let skip = false;
+      const charVariants: string[][] = [];
+      for (let i = 0; i < chars.length; i++) {
+        const fullCodes = findCharShapeCodes(singleIdx().text2codes, chars[i], pinyin2scode(combo[i]));
+        if (fullCodes.length === 0) {
+          skip = true;
+          break;
+        }
+        charVariants.push(fullCodes);
+      }
+      if (skip) continue;
+      if (chars.length === 1) {
+        if (!charVariants[0].includes(code) && !pinyin2scode(combo[0]).includes(code)) continue;
+      } else if (!generateCodes(charVariants).includes(code)) {
+        continue;
+      }
+    }
+    results.push(combo.join(' '));
+  }
+  return [...new Set(results)];
+}
+
+let singleIdxCache: DictIndex | null = null;
+
+function singleIdx(): DictIndex {
+  if (!singleIdxCache) {
+    singleIdxCache = buildLookup(loadDictFile(SINGLE_DICT)._data);
+  }
+  return singleIdxCache;
+}
 
 class Keytao {
   singleDict: Dict;
@@ -165,7 +230,7 @@ class Keytao {
 
   constructor() {
     this.singleDict = loadDictFile(SINGLE_DICT);
-    this.singleIdx = buildLookup(loadDictFile(SINGLE_DICT).data);
+    this.singleIdx = buildLookup(loadDictFile(SINGLE_DICT)._data);
   }
 
   lookupCharInfos(chars: { text: string, pinyin: string }[]) {
@@ -224,7 +289,7 @@ function main() {
   }
 
   const kt = new Keytao();
-  const phraseIdx = buildLookup(loadDictFile(PHRASE_DICT).data);
+  const phraseIdx = buildLookup(loadDictFile(PHRASE_DICT)._data);
 
   const charList = chars.map((text, i) => ({ text, pinyin: pinyins[i] }));
   let charInfos;
@@ -239,7 +304,7 @@ function main() {
   }
 
   console.log('\n=== 步骤2: 查单字字典取形码 ===');
-  console.log(`  单字字典条目数: ${kt.singleDict.data.length}`);
+  console.log(`  单字字典条目数: ${kt.singleDict._data.length}`);
   for (let i = 0; i < chars.length; i++) {
     for (const fc of charInfos[i]) {
       const sp = fc.slice(0, 2);
@@ -290,6 +355,7 @@ export {
   Keytao,
   buildLookup,
   generateCodes,
+  full_pinyin,
   pinyin2scode as pinyinToShuangpin,
 };
 

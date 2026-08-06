@@ -8,9 +8,25 @@ type DictColumn = 'text' | 'code' | 'weight' | 'stem';
 type Entry<C extends DictColumn[]> = { [K in C[number]]: K extends 'weight' ? number : string } & { _line: number };
 type Dict<C extends DictColumn[] = ['text', 'code', 'weight']> = {
     name: string;
+    version: string;
+    sort?: string;
+    use_preset_vocabulary?: boolean;
+    vocabulary?: string;
+    max_phrase_length?: number;
+    min_phrase_weight?: number;
     columns: C;
-    header: string;
-    data: Entry<C>[];
+    import_tables?: string[];
+    encoder?: {
+        exclude_patterns?: string[];
+        tail_anchor?: string;
+        rules?: ({
+            formula: string;
+        } & (
+            | { length_equal?: number; length_in_range?: never }
+            | { length_in_range?: [number, number]; length_equal?: never }
+        ))[];
+    };
+    _data: Entry<C>[];
 };
 
 function parseDict<C extends DictColumn[] = ['text', 'code', 'weight']>(content: string): Dict<C> {
@@ -35,11 +51,29 @@ function parseDict<C extends DictColumn[] = ['text', 'code', 'weight']>(content:
             });
             return entry as Entry<C>;
         });
-    return { name: head.name, columns, header: head_lines.join('\n'), data } as Dict<C>;
+    return {
+        ...head,
+        columns,
+        _data: data,
+    } as Dict<C>;
 }
 
 function loadDictFile<C extends DictColumn[] = ['text', 'code', 'weight']>(filePath: string): Dict<C> {
     return parseDict<C>(fs.readFileSync(filePath, 'utf-8'));
 }
 
-export { parseDict, loadDictFile, type Dict };
+function writeDictFile<C extends DictColumn[]>(filePath: string, dict: Dict<C>) {
+    const meta: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(dict)) {
+        if (key.startsWith('_') || value === undefined) continue;
+        meta[key] = value;
+    }
+    const head = yaml.dump(meta);
+    const body = dict._data.map(entry =>
+        dict.columns.map(col => String(entry[col])).join('\t')
+    ).join('\n');
+    const out = ['# Rime dictionary', '# encoding: utf-8', '---', head.trimEnd(), '...', body, ''].join('\n');
+    fs.writeFileSync(filePath, out, 'utf-8');
+}
+
+export { parseDict, loadDictFile, writeDictFile, type Dict };

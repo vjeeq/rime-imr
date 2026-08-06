@@ -15,8 +15,7 @@ const USER_DIR = path.join(__dirname, '..', 'dicts', 'keytao', 'imr');
 const OUT_DICT = path.join(__dirname, '..', 'dicts', 'keytao', 'keytao.extended.dict.yaml');
 
 function readDictFull(filePath) {
-  const dict = rime.loadDictFile(filePath);
-  return { header: dict.header, entries: dict.data };
+  return rime.loadDictFile(filePath);
 }
 
 function parseMyDict(filePath, warnings, errors) {
@@ -24,7 +23,7 @@ function parseMyDict(filePath, warnings, errors) {
   const dict = rime.loadDictFile(filePath);
   const entries = [];
 
-  for (const row of dict.data) {
+  for (const row of dict._data) {
     const { text, code, weight, stem, _line: line } = row;
     const chars = [...text];
     const pinyins = (stem || '').split(/\s+/);
@@ -55,10 +54,6 @@ function parseMyDict(filePath, warnings, errors) {
   }
 
   return entries;
-}
-
-function formatLine(entry) {
-  return `${entry.text}\t${entry.code}\t${entry.weight}`;
 }
 
 function isWeight1000(w) { return w >= 1000 && w < 2000; }
@@ -112,9 +107,7 @@ function printSummary(warnings, errors) {
 }
 
 function copyPhraseDict(outPath) {
-  const outPhrase = readDictFull(PHRASE_DICT);
-  const outBody = outPhrase.entries.map(formatLine).join('\n');
-  fs.writeFileSync(outPath, outPhrase.header + '\n' + outBody + '\n', 'utf-8');
+  rime.writeDictFile(outPath, rime.loadDictFile(PHRASE_DICT));
 }
 
 function main() {
@@ -166,10 +159,10 @@ function main() {
 
   console.log('\n=== 步骤2: 加载官方词典 ===');
   const phraseFull = readDictFull(PHRASE_DICT);
-  console.log(`  词组词典条目: ${phraseFull.entries.length}`);
+  console.log(`  词组词典条目: ${phraseFull._data.length}`);
 
   const kt = new Keytao();
-  const phraseLookup = buildLookup(phraseFull.entries).code2texts;
+  const phraseLookup = buildLookup(phraseFull._data).code2texts;
 
   console.log('\n=== 步骤3: 校验编码合法性 ===');
   let hasError = false;
@@ -264,7 +257,7 @@ function main() {
   const workingEntries = [];
   const removed = [];
 
-  for (const entry of phraseFull.entries) {
+  for (const entry of phraseFull._data) {
     if (texts100.has(entry.text) && allUserCodeSet.has(entry.code)) {
       removed.push(entry);
     } else {
@@ -515,12 +508,11 @@ function main() {
   }
   console.log(`  总计: ${totalEntries} 条`);
 
-  const header = phraseFull.header.replace('name: keytao.phrase', 'name: keytao.extended');
-  const body = workingEntries.map(formatLine).join('\n') +
-    '\n' +
-    newEntries.map(formatLine).join('\n');
-
-  fs.writeFileSync(opts.outDict, header + '\n' + body + '\n', 'utf-8');
+  rime.writeDictFile(opts.outDict, {
+    ...phraseFull,
+    name: 'keytao.extended',
+    _data: [...workingEntries, ...newEntries],
+  });
   console.log(`  已写入: ${opts.outDict}`);
 
   printSummary(warnings, errors);
