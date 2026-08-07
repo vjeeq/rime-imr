@@ -1,0 +1,12 @@
+# Rime dictionary
+# encoding: utf-8
+#
+# imr_键道单字
+#
+
+---
+name: imr_KT6_dz
+version: zzz
+import_tables:
+  - dicts/keytao/keytao.single
+...

@@ -51,6 +51,12 @@ const CH_J = new Set(['ai', 'an', 'ang', 'en', 'eng', 'u', 'un']);
 const CH_W = new Set(['a', 'i', 'ong', 'ou', 'ua', 'uai', 'uan', 'uang', 'ui', 'uo']);
 const CH_JW = new Set(['ao', 'e']);
 
+/**
+ * 将1个拼音转为(可能多个)键道音码(双拼)
+ *   zh:f/q ch:j/w uang:m/x 会导致音码不唯一
+ * @param pinyin 拼音
+ * @returns 键道音码
+ */
 function pinyin2scode(pinyin: string): string[] {
   if (pinyin.match(/^[jqxy]u$/)) {
     pinyin = pinyin.replace('u', 'v');
@@ -93,20 +99,20 @@ function pinyin2scode(pinyin: string): string[] {
 }
 
 function buildLookup(data: Dict<['text', 'code']>['_data']): DictIndex {
-  const textToCodes: DictLookup = {};
-  const codeToTexts: DictLookup = {};
+  const text2codes: DictLookup = {};
+  const code2texts: DictLookup = {};
   for (const entry of data) {
-    (textToCodes[entry.text] ||= []).push(entry.code);
-    (codeToTexts[entry.code] ||= []).push(entry.text);
+    (text2codes[entry.text] ||= []).push(entry.code);
+    (code2texts[entry.code] ||= []).push(entry.text);
   }
-  for (const text of Object.keys(textToCodes)) {
-    const maxLen = Math.max(...textToCodes[text].map(c => c.length));
-    textToCodes[text] = textToCodes[text].filter(c => c.length === maxLen);
+  for (const text of Object.keys(text2codes)) {
+    const maxLen = Math.max(...text2codes[text].map(c => c.length));
+    text2codes[text] = text2codes[text].filter(c => c.length === maxLen);
   }
-  for (const code of Object.keys(codeToTexts)) {
-    codeToTexts[code] = [...new Set(codeToTexts[code])];
+  for (const code of Object.keys(code2texts)) {
+    code2texts[code] = [...new Set(code2texts[code])];
   }
-  return { text2codes: textToCodes, code2texts: codeToTexts };
+  return { text2codes, code2texts };
 }
 
 function findCharShapeCodes(text2codes: DictLookup, text: string, scode: string[]) {
@@ -123,7 +129,10 @@ function findCharShapeCodes(text2codes: DictLookup, text: string, scode: string[
 }
 
 /**
- * 
+ * 将多个字的全码转为词的所有编码
+ *    [ ['字1的一种编码', '字1的另一种编码'], ['字2的编码'] ]
+ * => ['词的一种编码', '词的另一种编码', ...]
+ *
  * @param codes 词的字全码 codes[i] = [第i+1个字的全码]
  * @returns 词的所有编码
  */
@@ -159,78 +168,69 @@ function generateCodes(codes: string[][]): string[] {
     }
   }))];
 }
-let pinyinIdx: DictLookup | null = null;
-
-function loadPinyinIdx(): DictLookup {
-  if (!pinyinIdx) {
-    const idx: DictLookup = {};
-    for (const entry of loadDictFile(PINYIN_DICT)._data) {
-      (idx[entry.text] ||= []).push(entry.code);
-    }
-    for (const text of Object.keys(idx)) {
-      idx[text] = [...new Set(idx[text])];
-    }
-    pinyinIdx = idx;
-  }
-  return pinyinIdx;
-}
-
-/**
- * 根据键道编码反查中文的拼音。
- * @param text 中文词组
- * @param code 键道编码；为空时返回该字全部读音组合
- * @returns 能产出该编码的拼音组合（空格分隔）
- */
-function full_pinyin(text: string, code: string): string[] {
-  const idx = loadPinyinIdx();
-  const chars = [...text];
-  const variants = chars.map(ch => idx[ch] || []);
-  const combos: string[][] = variants.reduce<string[][]>(
-    (acc, curr) => acc.flatMap((c) => curr.map((v) => [...c, v])),
-    [[]]
-  );
-  const results: string[] = [];
-  for (const combo of combos) {
-    if (combo.length !== chars.length) continue;
-    if (code) {
-      let skip = false;
-      const charVariants: string[][] = [];
-      for (let i = 0; i < chars.length; i++) {
-        const fullCodes = findCharShapeCodes(singleIdx().text2codes, chars[i], pinyin2scode(combo[i]));
-        if (fullCodes.length === 0) {
-          skip = true;
-          break;
-        }
-        charVariants.push(fullCodes);
-      }
-      if (skip) continue;
-      if (chars.length === 1) {
-        if (!charVariants[0].includes(code) && !pinyin2scode(combo[0]).includes(code)) continue;
-      } else if (!generateCodes(charVariants).includes(code)) {
-        continue;
-      }
-    }
-    results.push(combo.join(' '));
-  }
-  return [...new Set(results)];
-}
-
-let singleIdxCache: DictIndex | null = null;
-
-function singleIdx(): DictIndex {
-  if (!singleIdxCache) {
-    singleIdxCache = buildLookup(loadDictFile(SINGLE_DICT)._data);
-  }
-  return singleIdxCache;
-}
-
 class Keytao {
   singleDict: Dict;
   singleIdx: DictIndex;
+  pinyinIdx: DictLookup | null = null;
 
   constructor() {
-    this.singleDict = loadDictFile(SINGLE_DICT);
-    this.singleIdx = buildLookup(loadDictFile(SINGLE_DICT)._data);
+    const single = loadDictFile(SINGLE_DICT);
+    this.singleDict = single;
+    this.singleIdx = buildLookup(single._data);
+  }
+
+  private loadPinyinIdx(): DictLookup {
+    if (!this.pinyinIdx) {
+      const idx: DictLookup = {};
+      for (const entry of loadDictFile(PINYIN_DICT)._data) {
+        (idx[entry.text] ||= []).push(entry.code);
+      }
+      for (const text of Object.keys(idx)) {
+        idx[text] = [...new Set(idx[text])];
+      }
+      this.pinyinIdx = idx;
+    }
+    return this.pinyinIdx;
+  }
+
+  /**
+   * 根据键道编码反查中文的拼音。
+   * @param text 中文词组
+   * @param code 键道编码；为空时返回该字全部读音组合
+   * @returns 能产出该编码的拼音组合（空格分隔）
+   */
+  fullPinyin(text: string, code: string): string[] {
+    const idx = this.loadPinyinIdx();
+    const chars = [...text];
+    const variants = chars.map(ch => idx[ch] || []);
+    const combos: string[][] = variants.reduce<string[][]>(
+      (acc, curr) => acc.flatMap((c) => curr.map((v) => [...c, v])),
+      [[]]
+    );
+    const results: string[] = [];
+    for (const combo of combos) {
+      if (combo.length !== chars.length) continue;
+      if (code) {
+        let skip = false;
+        const charVariants: string[][] = [];
+        for (let i = 0; i < chars.length; i++) {
+          const fullCodes = findCharShapeCodes(this.singleIdx.text2codes, chars[i], pinyin2scode(combo[i]));
+          if (fullCodes.length === 0) {
+            skip = true;
+            break;
+          }
+          charVariants.push(fullCodes);
+        }
+        if (skip) continue;
+        if (chars.length === 1) {
+          if (!charVariants[0].includes(code) && !pinyin2scode(combo[0]).includes(code)) continue;
+        } else if (!generateCodes(charVariants).includes(code)) {
+          continue;
+        }
+      }
+      results.push(combo.join(' '));
+    }
+    return [...new Set(results)];
   }
 
   lookupCharInfos(chars: { text: string, pinyin: string }[]) {
@@ -355,7 +355,6 @@ export {
   Keytao,
   buildLookup,
   generateCodes,
-  full_pinyin,
   pinyin2scode as pinyinToShuangpin,
 };
 

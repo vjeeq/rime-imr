@@ -7,6 +7,7 @@ schema:
   version: "alpha"
   dependencies:
     - imr_KT6_lookup
+    - imr_KT6_dz
     - imr_pinyin_comment
 
 switches:
@@ -30,6 +31,9 @@ switches:
   - name: topup_hint  # lua: keytao_filter.lua
     reset: 1
     states: [ "关顶功提示", "开顶功提示" ]
+  - name: sentence_mode_enabled
+    reset: 1
+    states: [ 连打关, 连打开 ]
 
 
 punctuator:
@@ -43,6 +47,8 @@ punctuator:
 engine:
   processors:
     - ascii_composer
+    - lua_processor@*dynamic_phrase_processor  # '/'' 动态自造词
+    - lua_processor@*sentence_buffer  # 空格/'/顶功暂存；双空格整句上屏；回车上屏原编码
     - recognizer
     - key_binder
     - lua_processor@*smart_2
@@ -55,12 +61,15 @@ engine:
   segmentors:
     - ascii_segmentor
     - matcher
+    - affix_segmentor@sentence_mode  # a 前缀整句连打模式
     - abc_segmentor
     - affix_segmentor@lookup
     - punct_segmentor
     - fallback_segmentor
   translators:
     - punct_translator
+    - lua_translator@*dynamic_phrase  # '词'编码 动态自造词
+    - table_translator@sentence_mode  # a 前缀整句连打
     - table_translator
     - table_translator@lookup
     - history_translator@repeat_history
@@ -74,8 +83,9 @@ engine:
 speller:
   auto_select: false
   auto_select_unique_candidate: false
-  alphabet: "abcdefghijklmnopqrstuvwxyz;"
-  initials: "abcdefghijklmnopqrstuvwxyz;"
+  alphabet: "abcdefghijklmnopqrstuvwxyz;'"
+  initials: "abcdefghijklmnopqrstuvwxyz;'"
+  delimiter: " '"
 
 
 translator:
@@ -119,6 +129,24 @@ recognizer:
   patterns:
     uppercase: "[A-Z][-_+.'0-9A-Za-z]*$"   # 解决路由
     lookup: "^;([bcdefghjklmnpqrstwxyz]|[avuio])+$"
+    sentence_mode: "^a[a-z']*$"  # a 前缀整句连打模式
+    dynamic_phrase: "^'(?:')?(?:[^']*'[^']*|[^']+)$"  # '词'编码、''词['编码]
+
+
+# a 前缀整句连打：空格/顶功向完整编码串追加 '，双空格提交整句。
+sentence_mode:
+  tag: sentence_mode
+  dictionary: imr_KT6_dz
+  enable_sentence: true
+  enable_completion: true
+  enable_user_dict: false
+  prefix: "a"
+  tips: ""
+
+
+# 动态自造词：'词'编码 添加 / ''词 删除，存于 LevelDb userdb（可被 Rime 用户资料同步）。
+dynamic_phrase:
+  db_name: imr_KT6_dz_self
 
 
 topup:

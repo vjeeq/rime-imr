@@ -50,6 +50,11 @@ local function processor(key_event, env)
     local schema = engine.schema
     local context = engine.context
 
+    -- a 模式（sentence_mode）下放行，由 sentence_buffer 处理器接管
+    if context:get_option('sentence_mode_enabled') and context.input:sub(1, 1) == "a" then
+        return 2
+    end
+
     local input = context.input 
     local input_len = #input
 
